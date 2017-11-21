@@ -66,7 +66,7 @@ func NewEngine(config DBOptions, t []interface{}) (*xorm.Engine, error){
 
 func Tables() []interface{} {
 	var tables []interface{}
-	tables = append(tables, new(Build))
+	tables = append(tables, new(Build), new(CodeBaseUser))
 	return tables
 }
 

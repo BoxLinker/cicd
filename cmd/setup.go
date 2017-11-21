@@ -18,6 +18,7 @@ func SetupCodeBase(c *cli.Context) (codebase.CodeBase, error) {
 
 func setupGithub(c *cli.Context)(codebase.CodeBase, error){
 	return github.New(github.Opts{
+		HomeHost: 	 c.String("home-host"),
 		URL:         c.String("github-server"),
 		Context:     c.String("github-context"),
 		Client:      c.String("github-client"),

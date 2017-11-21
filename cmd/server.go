@@ -13,6 +13,7 @@ import (
 	"os"
 	"github.com/BoxLinker/cicd/models"
 	"github.com/go-xorm/xorm"
+	"github.com/BoxLinker/cicd/manager"
 )
 
 var flags = []cli.Flag{
@@ -26,35 +27,15 @@ var flags = []cli.Flag{
 		Name: "listen",
 		Usage: "http listen adress",
 	},
-	cli.StringFlag{
-		EnvVar: "RABBITMQ_HOST",
-		Name: "rabbitmq-host",
-		Usage: "the host connect to rabbitmq",
-	},
-	cli.StringFlag{
-		EnvVar: "RABBITMQ_EXCHANGE",
-		Name: "rabbitmq-exchange",
-		Usage: "the rabbitmq exchange connect to rabbitmq",
-	},
-	cli.StringFlag{
-		EnvVar: "RABBITMQ_EXCHANGE_TYPE",
-		Name: "rabbitmq-exchange-type",
-		Usage: "the rabbitmq exchange type connect to rabbitmq",
-	},
-	cli.StringFlag{
-		EnvVar: "RABBITMQ_QUEUE_NAME",
-		Name: "rabbitmq-queue-name",
-		Usage: "the rabbitmq queue name connect to rabbitmq",
-	},
-	cli.StringFlag{
-		EnvVar: "RABBITMQ_BINDING_KEY",
-		Name: "rabbitmq-binding-key",
-		Usage: "the rabbitmq binding key connect to rabbitmq",
-	},
 	cli.BoolFlag{
 		EnvVar: "KUBERNETES_IN_CLUSTER",
 		Name: "kubernetes-in-cluster",
 		Usage: "whether connect to kubernetes by in cluster mode",
+	},
+	cli.StringFlag{
+		EnvVar: "HOME_HOST",
+		Name: "home-host",
+		Usage: "boxlinker home page host",
 	},
 	cli.StringFlag{
 		EnvVar: "DB_TYPE",
@@ -85,6 +66,26 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "TOKEN_AUTH_URL",
 		Name: "token-auth-url",
+	},
+	cli.BoolFlag{
+		EnvVar: "GITHUB",
+		Name: "github",
+	},
+	cli.StringFlag{
+		EnvVar: "GITHUB_SERVER",
+		Name: "github-server",
+	},
+	cli.StringFlag{
+		EnvVar: "GITHUB_CLIENT",
+		Name: "github-client",
+	},
+	cli.StringFlag{
+		EnvVar: "GITHUB_SECRET",
+		Name: "github-secret",
+	},
+	cli.StringSliceFlag{
+		EnvVar: "GITHUB_SCOPE",
+		Name: "github-scope",
 	},
 }
 
@@ -152,13 +153,20 @@ func server(c *cli.Context) error {
 		return err
 	}
 
+	controllerManager := new(manager.DefaultManager)
+	controllerManager.ClientSet = clientSet
+	controllerManager.DBEngine = dbEngine
+
 	cs := new(cicdServer.Server)
 	cs.CodeBase = cb
-	cs.ClientSet = clientSet
-	cs.DBEngine = dbEngine
+	cs.Manager = controllerManager
 	cs.Listen = c.String("listen")
+	cs.Config = cicdServer.Config{
+		TokenAuthURL: c.String("token-auth-url"),
+		HomeHost: c.String("home-host"),
+	}
 
-	return cs.Run(c)
+	return cs.Run()
 }
 
 func before(c *cli.Context) error { return nil }

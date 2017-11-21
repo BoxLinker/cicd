@@ -3,11 +3,9 @@ package middleware
 import (
 	"net/http"
 	"github.com/BoxLinker/boxlinker-api"
-	"github.com/BoxLinker/boxlinker-api/modules/httplib"
-	"time"
-	"encoding/json"
 	"golang.org/x/net/context"
 	"github.com/Sirupsen/logrus"
+	"github.com/BoxLinker/cicd/auth"
 )
 
 type AuthTokenRequired struct {
@@ -33,14 +31,19 @@ func (a *AuthTokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.R
 		return
 	}
 	logrus.Debugf("AuthToken url: %s", a.authUrl)
-	resp, err := httplib.Get(a.authUrl).Header("X-Access-Token", token).SetTimeout(time.Second*3, time.Second*3).Response()
+	//resp, err := httplib.Get(a.authUrl).Header("X-Access-Token", token).SetTimeout(time.Second*3, time.Second*3).Response()
+	//if err != nil {
+	//	logrus.Errorf("AuthToken err: %v", err)
+	//	boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil)
+	//	return
+	//}
+	//var result resultAuth
+	//if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	//	boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil, err.Error())
+	//	return
+	//}
+	result, err := auth.TokenAuth(a.authUrl, token)
 	if err != nil {
-		logrus.Errorf("AuthToken err: %v", err)
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil)
-		return
-	}
-	var result resultAuth
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil, err.Error())
 		return
 	}

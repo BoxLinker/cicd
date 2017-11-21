@@ -6,5 +6,5 @@ import (
 )
 
 type CodeBase interface{
-	Authorize(w http.ResponseWriter, r *http.Request) (*models.User, error)
+	Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.CodeBaseUser, error)
 }
