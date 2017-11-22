@@ -21,6 +21,13 @@ func (pc PageConfig) PaginationJSON() map[string]int {
 	return m
 }
 
+func (pc PageConfig) PaginationResult(output interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"pagination": pc.PaginationJSON(),
+		"data": output,
+	}
+}
+
 func (pc PageConfig) FormatOutput(output interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"pagination": pc.PaginationJSON(),

@@ -90,6 +90,24 @@ type client struct {
 	MergeRef    bool
 }
 
+func (c *client) Repos(u *models.CodeBaseUser) ([]*models.Repo, error) {
+	client := c.newClientToken(u.AccessToken)
+	opts := new(github.RepositoryListOptions)
+	opts.PerPage = 100
+	opts.Page = 1
+
+	var repos []*models.Repo
+	if opts.Page > 0 {
+		list, resp, err := client.Repositories.List("", opts)
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, convertRepoList(list, u)...)
+		opts.Page = resp.NextPage
+	}
+	return repos, nil
+}
+
 func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.CodeBaseUser, error) {
 
 	oauth2Config := &oauth2.Config{

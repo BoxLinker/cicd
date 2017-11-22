@@ -1,6 +1,9 @@
 package manager
 
-import "github.com/BoxLinker/cicd/models"
+import (
+	"github.com/BoxLinker/cicd/models"
+	"github.com/Sirupsen/logrus"
+)
 
 func (m *DefaultManager) SaveCodeBaseUser(user *models.CodeBaseUser) error {
 	sess := m.DBEngine.NewSession()
@@ -11,6 +14,17 @@ func (m *DefaultManager) SaveCodeBaseUser(user *models.CodeBaseUser) error {
 		return err
 	}
 	return sess.Commit()
+}
+
+func (m *DefaultManager) GetCodeBaseUserByUserID(userID string) *models.CodeBaseUser {
+	u := &models.CodeBaseUser{
+		UserID: userID,
+	}
+	if has, err := m.DBEngine.Get(u); !has {
+		logrus.Errorf("GetCodeBaseUserByUserID err (%s)", err.Error())
+		return nil
+	}
+	return u
 }
 
 func (m *DefaultManager) IsCodeBaseUserExists(userID, kind string) (bool, error) {

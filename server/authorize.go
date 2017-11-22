@@ -4,19 +4,17 @@ import (
 	"net/http"
 	"github.com/Sirupsen/logrus"
 	"fmt"
-	"github.com/BoxLinker/cicd/auth"
-	"github.com/cabernety/gopkg/httplib"
-	"github.com/BoxLinker/boxlinker-api"
 )
 
 func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
-	loginUrl := fmt.Sprintf("%s/login", s.Config.HomeHost)
-	token := httplib.GetCookie(r, "X-Access-Token")
-	if len(token) == 0 {
-		http.Redirect(w, r, loginUrl, 301)
-		return
-	}
-	codebaseUser, err := s.CodeBase.Authorize(w, r, token)
+	logrus.Debugf("AuthCodeBase ==>")
+	//loginUrl := fmt.Sprintf("%s/login", s.Config.HomeHost)
+	//token := httplib.GetCookie(r, "X-Access-Token")
+	//if len(token) == 0 {
+	//	http.Redirect(w, r, loginUrl, 301)
+	//	return
+	//}
+	codebaseUser, err := s.CodeBase.Authorize(w, r, "boxlinker-cicd")
 	if err != nil {
 		logrus.Errorf("cannot authenticate user. %s", err)
 		http.Redirect(w, r, fmt.Sprintf("%s/?error=oauth_error", s.Config.HomeHost), 301)
@@ -27,17 +25,18 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	result, err := auth.TokenAuth(s.Config.TokenAuthURL, codebaseUser.Token)
-	if err != nil {
-		http.Redirect(w, r, loginUrl, 301)
-		return
-	}
-	if result.Status != boxlinker.STATUS_OK {
-		http.Redirect(w, r, loginUrl, 301)
-		return
-	}
+	//result, err := auth.TokenAuth(s.Config.TokenAuthURL, codebaseUser.Token)
+	//if err != nil {
+	//	http.Redirect(w, r, loginUrl, 301)
+	//	return
+	//}
+	//if result.Status != boxlinker.STATUS_OK {
+	//	http.Redirect(w, r, loginUrl, 301)
+	//	return
+	//}
 
-	uid := result.Results.(map[string]interface{})["uid"].(string)
+	//uid := result.Results.(map[string]interface{})["uid"].(string)
+	uid := s.getCtxUserID(r)
 	codebaseUser.UserID = uid
 
 	if has, _ := s.Manager.IsCodeBaseUserExists(codebaseUser.UserID, codebaseUser.Kind); has {

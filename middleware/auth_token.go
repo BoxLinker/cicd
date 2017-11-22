@@ -10,11 +10,14 @@ import (
 
 type AuthTokenRequired struct {
 	authUrl string
+	redirectURL string
+
 }
 
-func NewAuthTokenRequired(url string) Middleware {
+func NewAuthTokenRequired(url string, redirectURL string) Middleware {
 	return &AuthTokenRequired{
 		authUrl: url,
+		redirectURL: redirectURL,
 	}
 }
 
@@ -26,8 +29,13 @@ type resultAuth struct {
 
 func (a *AuthTokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
 	token := r.Header.Get("X-Access-Token")
+	redirect := len(a.redirectURL) > 0
 	if token == "" {
-		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil)
+		if redirect {
+			http.Redirect(w, r, a.redirectURL, 301)
+			return
+		}
+		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
 		return
 	}
 	logrus.Debugf("AuthToken url: %s", a.authUrl)
@@ -44,6 +52,11 @@ func (a *AuthTokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.R
 	//}
 	result, err := auth.TokenAuth(a.authUrl, token)
 	if err != nil {
+		if redirect {
+			logrus.Errorf("AuthToken err: %s", err.Error())
+			http.Redirect(w, r, a.redirectURL, 301)
+			return
+		}
 		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil, err.Error())
 		return
 	}
@@ -52,7 +65,11 @@ func (a *AuthTokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.R
 		next(w, r.WithContext(context.WithValue(r.Context(), "user", result.Results)))
 	} else {
 		logrus.Debugf("AuthToken failed: %+v", result)
-		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil)
+		if redirect {
+			http.Redirect(w, r, a.redirectURL, 301)
+			return
+		}
+		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
 	}
 }
 

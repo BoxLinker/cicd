@@ -10,6 +10,9 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/Sirupsen/logrus"
 	"github.com/BoxLinker/cicd/manager"
+	//"fmt"
+	"github.com/BoxLinker/cicd/models"
+	"fmt"
 )
 
 type Config struct {
@@ -28,21 +31,27 @@ func (s *Server) Run() error {
 
 	logrus.Debugf("Server Config: \n%+v", s.Config)
 	cs := boxlinker.Cors
-
 	globalMux := http.NewServeMux()
 
-	apiRouter := mux.NewRouter()
+	tokenAuthRequired := middleware.NewAuthTokenRequired(s.Config.TokenAuthURL, "")
+	tokenAuthRedirectRequired := middleware.NewAuthTokenRequired(s.Config.TokenAuthURL, fmt.Sprintf("%s/login", s.Config.HomeHost))
 
-	tokenAuthRequired := middleware.NewAuthTokenRequired(s.Config.TokenAuthURL)
+
+	apiRouter := mux.NewRouter()
+	apiRouter.HandleFunc("/v1/cicd/auth/repos", s.GetRepos).Methods("GET")
+
 	tokenAuthRouter := negroni.New()
 	tokenAuthRouter.Use(negroni.HandlerFunc(tokenAuthRequired.HandlerFuncWithNext))
 	tokenAuthRouter.UseHandler(apiRouter)
-	globalMux.Handle("/v1/cicd/auth", tokenAuthRouter)
+	globalMux.Handle("/v1/cicd/auth/", tokenAuthRouter)
 
-	// git callback
+	// codebase auth router
 	authorizeRouter := mux.NewRouter()
 	authorizeRouter.HandleFunc("/v1/cicd/authorize", s.AuthCodeBase).Methods("GET", "POST")
-	globalMux.Handle("/v1/cicd/authorize", authorizeRouter)
+	tokenAuthRedirectRouter := negroni.New()
+	tokenAuthRedirectRouter.Use(negroni.HandlerFunc(tokenAuthRedirectRequired.HandlerFuncWithNext))
+	tokenAuthRedirectRouter.UseHandler(authorizeRouter)
+	globalMux.Handle("/v1/cicd/authorize", tokenAuthRedirectRouter)
 
 	ss := http.Server{
 		Addr: s.Listen,
@@ -51,4 +60,20 @@ func (s *Server) Run() error {
 
 	logrus.Infof("CICD server running on %s", s.Listen)
 	return ss.ListenAndServe()
+}
+
+func (a *Server) getCtxUserID(r *http.Request) string {
+	us := r.Context().Value("user")
+	if us == nil {
+		return ""
+	}
+	ctx := us.(map[string]interface{})
+	if ctx == nil || ctx["uid"] == nil {
+		return ""
+	}
+	return ctx["uid"].(string)
+}
+
+func (a *Server) getUserInfo(r *http.Request) *models.CodeBaseUser {
+	return a.Manager.GetCodeBaseUserByUserID(a.getCtxUserID(r))
 }

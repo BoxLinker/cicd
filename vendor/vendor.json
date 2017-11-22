@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "taMlOn6kk2O/uJK7PSOBmLvA03w=",
+			"checksumSHA1": "Y+MGq7QGSKB0ejtssWVfx9nEzIU=",
 			"path": "github.com/BoxLinker/boxlinker-api",
-			"revision": "d98a4d76f0ff6d46388f6c75334f88e3b1e30dd3",
-			"revisionTime": "2017-11-21T12:00:10Z"
+			"revision": "f385561eb547a3484c21f49aeab23efe73cf2299",
+			"revisionTime": "2017-11-22T06:16:37Z"
 		},
 		{
 			"checksumSHA1": "9Ob5JNGzi/pGXYMuHclig69IHPk=",

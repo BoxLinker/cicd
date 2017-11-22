@@ -98,6 +98,7 @@ func server(c *cli.Context) error {
 	)
 
 	if c.Bool("debug") {
+		logrus.Infof("Debug enabled")
 		logrus.SetLevel(logrus.DebugLevel)
 	} else {
 		logrus.SetLevel(logrus.WarnLevel)
