@@ -14,11 +14,11 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 	u := s.getUserInfo(r)
 
 	if flush {
-		if repos, err := s.CodeBase.Repos(u); err != nil {
+		if repos, err := s.Manager.GetSCM(u.SCM).Repos(u); err != nil {
 			boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
 		} else {
-			if err := s.Manager.SaveRepos(repos); err != nil {
+			if err := s.Manager.RepoBatch(repos); err != nil {
 				boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 				return
 			}

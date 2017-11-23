@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"github.com/gorilla/context"
-	"github.com/BoxLinker/cicd/codebase"
 	"github.com/BoxLinker/cicd/middleware"
 	"github.com/codegangsta/negroni"
 	"github.com/Sirupsen/logrus"
@@ -21,10 +20,9 @@ type Config struct {
 }
 
 type Server struct {
-	CodeBase codebase.CodeBase
-	Listen string
-	Manager *manager.DefaultManager
-	Config Config
+	Listen   string
+	Manager  *manager.DefaultManager
+	Config   Config
 }
 
 func (s *Server) Run() error {
@@ -34,16 +32,18 @@ func (s *Server) Run() error {
 	globalMux := http.NewServeMux()
 
 	tokenAuthRequired := middleware.NewAuthTokenRequired(s.Config.TokenAuthURL, "")
+	scmRequired := middleware.NewSCMRequired()
 	tokenAuthRedirectRequired := middleware.NewAuthTokenRequired(s.Config.TokenAuthURL, fmt.Sprintf("%s/login", s.Config.HomeHost))
 
 
 	apiRouter := mux.NewRouter()
 	apiRouter.HandleFunc("/v1/cicd/auth/repos", s.GetRepos).Methods("GET")
 
-	tokenAuthRouter := negroni.New()
-	tokenAuthRouter.Use(negroni.HandlerFunc(tokenAuthRequired.HandlerFuncWithNext))
-	tokenAuthRouter.UseHandler(apiRouter)
-	globalMux.Handle("/v1/cicd/auth/", tokenAuthRouter)
+	authRouter := negroni.New()
+	authRouter.Use(negroni.HandlerFunc(scmRequired.HandlerFuncWithNext))
+	authRouter.Use(negroni.HandlerFunc(tokenAuthRequired.HandlerFuncWithNext))
+	authRouter.UseHandler(apiRouter)
+	globalMux.Handle("/v1/cicd/auth/", authRouter)
 
 	// codebase auth router
 	authorizeRouter := mux.NewRouter()
@@ -62,18 +62,19 @@ func (s *Server) Run() error {
 	return ss.ListenAndServe()
 }
 
-func (a *Server) getCtxUserID(r *http.Request) string {
+func (a *Server) getCtxUserID(r *http.Request) int64 {
 	us := r.Context().Value("user")
 	if us == nil {
-		return ""
+		return 0
 	}
 	ctx := us.(map[string]interface{})
 	if ctx == nil || ctx["uid"] == nil {
-		return ""
+		return 0
 	}
-	return ctx["uid"].(string)
+	return ctx["uid"].(int64)
 }
 
-func (a *Server) getUserInfo(r *http.Request) *models.CodeBaseUser {
-	return a.Manager.GetCodeBaseUserByUserID(a.getCtxUserID(r))
+func (a *Server) getUserInfo(r *http.Request) *models.SCMUser {
+	scm := models.SCMType(boxlinker.GetQueryParam(r, "scm"))
+	return a.Manager.GetSCMUserByUCenterID(a.getCtxUserID(r), scm)
 }

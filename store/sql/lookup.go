@@ -1,5 +1,7 @@
 package sql
 
+import "github.com/BoxLinker/cicd/store/sql/mysql"
+
 // Supported database drivers
 const (
 	DriverSqlite   = "sqlite3"
@@ -9,8 +11,10 @@ const (
 
 func Lookup(driver string, name string) string {
 	switch driver {
+	case DriverMysql:
+		return mysql.Lookup(name)
 	default:
-
+		return ""
 	}
 }
 

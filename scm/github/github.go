@@ -1,7 +1,6 @@
 package github
 
 import (
-	"github.com/BoxLinker/cicd/codebase"
 	"net/url"
 	"net"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 	"crypto/tls"
 	"github.com/google/go-github/github"
+	"github.com/BoxLinker/cicd/scm"
 )
 
 const (
@@ -36,7 +36,7 @@ type Opts struct {
 	MergeRef    bool     // Clone pull requests using the merge ref.
 }
 
-func New(opts Opts) (codebase.CodeBase, error) {
+func New(opts Opts) (scm.SCM, error) {
 	url_, err := url.Parse(opts.URL)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ type client struct {
 	MergeRef    bool
 }
 
-func (c *client) Repos(u *models.CodeBaseUser) ([]*models.Repo, error) {
+func (c *client) Repos(u *models.SCMUser) ([]*models.Repo, error) {
 	client := c.newClientToken(u.AccessToken)
 	opts := new(github.RepositoryListOptions)
 	opts.PerPage = 100
@@ -108,7 +108,7 @@ func (c *client) Repos(u *models.CodeBaseUser) ([]*models.Repo, error) {
 	return repos, nil
 }
 
-func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.CodeBaseUser, error) {
+func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.SCMUser, error) {
 
 	oauth2Config := &oauth2.Config{
 		ClientID: c.Client,
@@ -122,7 +122,7 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 	}
 
 	if err := r.FormValue("error"); err != "" {
-		return nil, &codebase.AuthError{
+		return nil, &scm.AuthError{
 			Err: err,
 			Description: r.FormValue("error_description"),
 			URI:         r.FormValue("error_uri"),
@@ -147,11 +147,11 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 	if err != nil {
 		return nil, err
 	}
-	return &models.CodeBaseUser{
+	return &models.SCMUser{
 		Login: *user.Login,
 		Token: state,
 		AccessToken: token.AccessToken,
-		Kind: "github",
+		SCM: "github",
 	}, nil
 }
 

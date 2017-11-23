@@ -7,7 +7,7 @@ import (
 
 const defaultBranch = "master"
 
-func convertRepoList(from []github.Repository, u *models.CodeBaseUser) []*models.Repo {
+func convertRepoList(from []github.Repository, u *models.SCMUser) []*models.Repo {
 	var repos []*models.Repo
 	for _, repo := range from {
 		repos = append(repos, convertRepo(&repo, u))
@@ -15,7 +15,7 @@ func convertRepoList(from []github.Repository, u *models.CodeBaseUser) []*models
 	return repos
 }
 
-func convertRepo(form *github.Repository, u *models.CodeBaseUser) *models.Repo {
+func convertRepo(form *github.Repository, u *models.SCMUser) *models.Repo {
 	repo := &models.Repo{
 		UserID: u.ID,
 		Name: *form.Name,
@@ -23,7 +23,7 @@ func convertRepo(form *github.Repository, u *models.CodeBaseUser) *models.Repo {
 		Owner: *form.Owner.Login,
 		Link: *form.HTMLURL,
 		Clone: *form.CloneURL,
-		Kind: models.RepoGithub,
+		SCM: models.RepoGithub,
 		Branch: defaultBranch,
 		IsPrivate: *form.Private,
 	}

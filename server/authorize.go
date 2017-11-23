@@ -4,48 +4,39 @@ import (
 	"net/http"
 	"github.com/Sirupsen/logrus"
 	"fmt"
+	"github.com/BoxLinker/boxlinker-api"
+	"github.com/BoxLinker/cicd/models"
 )
 
 func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
-	logrus.Debugf("AuthCodeBase ==>")
-	//loginUrl := fmt.Sprintf("%s/login", s.Config.HomeHost)
-	//token := httplib.GetCookie(r, "X-Access-Token")
-	//if len(token) == 0 {
-	//	http.Redirect(w, r, loginUrl, 301)
-	//	return
-	//}
-	codebaseUser, err := s.CodeBase.Authorize(w, r, "boxlinker-cicd")
+	scmType := models.SCMType(boxlinker.GetQueryParam(r, "scm"))
+	if scmType == "" || !scmType.Exists() {
+		http.Error(w, "wrong scm type", http.StatusBadRequest)
+		return
+	}
+	logrus.Debugf("AuthCodeBase ==> %s", scmType)
+
+	scmUser, err := s.Manager.GetSCM(scmType).Authorize(w, r, "boxlinker-cicd")
 	if err != nil {
 		logrus.Errorf("cannot authenticate user. %s", err)
 		http.Redirect(w, r, fmt.Sprintf("%s/?error=oauth_error", s.Config.HomeHost), 301)
 		return
 	}
 
-	if codebaseUser == nil {
+	if scmUser == nil {
 		return
 	}
 
-	//result, err := auth.TokenAuth(s.Config.TokenAuthURL, codebaseUser.Token)
-	//if err != nil {
-	//	http.Redirect(w, r, loginUrl, 301)
-	//	return
-	//}
-	//if result.Status != boxlinker.STATUS_OK {
-	//	http.Redirect(w, r, loginUrl, 301)
-	//	return
-	//}
-
-	//uid := result.Results.(map[string]interface{})["uid"].(string)
 	uid := s.getCtxUserID(r)
-	codebaseUser.UserID = uid
+	scmUser.UCenterID = uid
 
-	if has, _ := s.Manager.IsCodeBaseUserExists(codebaseUser.UserID, codebaseUser.Kind); has {
-		if err := s.Manager.UpdateCodeBaseUser(codebaseUser); err != nil {
+	if u := s.Manager.GetSCMUserByUCenterID(scmUser.UCenterID, scmUser.SCM); u != nil {
+		if err := s.Manager.UpdateSCMUser(scmUser); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, err.Error()), 301)
 			return
 		}
 	} else {
-		if err := s.Manager.SaveCodeBaseUser(codebaseUser); err != nil {
+		if err := s.Manager.SaveSCMUser(scmUser); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, err.Error()), 301)
 			return
 		}

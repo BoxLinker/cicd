@@ -318,6 +318,12 @@
 			"revisionTime": "2016-06-18T19:32:21Z"
 		},
 		{
+			"checksumSHA1": "tH6kO0D9cqNkiv8w2x6kGTM93LI=",
+			"path": "github.com/russross/meddler",
+			"revision": "9515f6b01c158e6a98939d1ddfddb8a05544e08d",
+			"revisionTime": "2017-03-19T16:30:28Z"
+		},
+		{
 			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
 			"path": "github.com/satori/go.uuid",
 			"revision": "b061729afc07e77a8aa4fad0a2fd840958f1942a",

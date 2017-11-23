@@ -1,4 +1,4 @@
-package codebase
+package scm
 
 // AuthError represents remote authentication error.
 type AuthError struct {
