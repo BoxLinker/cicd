@@ -118,7 +118,7 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 			AuthURL: fmt.Sprintf("%s/login/oauth/authorize", c.URL),
 			TokenURL: fmt.Sprintf("%s/login/oauth/access_token", c.URL),
 		},
-		RedirectURL: fmt.Sprintf("%s://%s/v1/cicd/authorize", httplib.GetScheme(r), httplib.GetHost(r)),
+		RedirectURL: fmt.Sprintf("%s://%s/v1/cicd/authorize/github", httplib.GetScheme(r), httplib.GetHost(r)),
 	}
 
 	if err := r.FormValue("error"); err != "" {
@@ -149,6 +149,7 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 	}
 	return &models.SCMUser{
 		Login: *user.Login,
+		Email: *user.Email,
 		Token: state,
 		AccessToken: token.AccessToken,
 		SCM: "github",

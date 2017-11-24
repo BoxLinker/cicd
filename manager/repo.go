@@ -5,8 +5,8 @@ import (
 	"github.com/BoxLinker/boxlinker-api"
 )
 
-func (m *DefaultManager) RepoBatch(repos []*models.Repo) error {
-	return m.dataStore.RepoBatch(repos)
+func (m *DefaultManager) RepoBatch(user *models.SCMUser, repos []*models.Repo) error {
+	return m.dataStore.RepoBatch(user, repos)
 }
 
 // TODO 分页查询

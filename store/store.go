@@ -43,6 +43,8 @@ func open(driver, dataSource string) *sql.DB {
 		db.SetMaxIdleConns(0)
 	}
 
+	setupMeddler(driver)
+
 	if err := pingDatabase(db); err != nil {
 		logrus.Errorln(err)
 		logrus.Fatalln("database ping attempts failed")

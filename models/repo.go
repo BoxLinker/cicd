@@ -19,5 +19,5 @@ type Repo struct {
 	Created     time.Time `json:"created"           meddler:"-"`
 	CreatedUnix int64 	`json:"-"                   meddler:"created_unix"`
 	Updated     time.Time `json:"updated"           meddler:"-"`
-	UpdatedUnix int64	`json:"-"                   meddler:"updated_Unix"`
+	UpdatedUnix int64	`json:"-"                   meddler:"updated_unix"`
 }

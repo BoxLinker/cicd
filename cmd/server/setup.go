@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/urfave/cli"
@@ -7,11 +7,11 @@ import (
 	"github.com/BoxLinker/cicd/models"
 )
 
-func SetupCodeBase(c *cli.Context) (map[models.SCMType]scm.SCM, error) {
-	m := map[models.SCMType]scm.SCM{}
+func SetupCodeBase(c *cli.Context) (map[string]scm.SCM, error) {
+	m := map[string]scm.SCM{}
 	var err error
 
-	if c.Bool("github") {
+	if c.Bool(models.GITHUB) {
 		m[models.GITHUB], err = setupGithub(c)
 		if err != nil {
 			return nil, err

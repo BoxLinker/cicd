@@ -11,13 +11,12 @@ import (
 	"os"
 	"github.com/BoxLinker/cicd/store"
 	"github.com/BoxLinker/cicd/scm"
-	"github.com/BoxLinker/cicd/models"
 )
 
 type DefaultManager struct {
 	dataStore *store.DataStore
 	clientSet *kubernetes.Clientset
-	scmMap map[models.SCMType]scm.SCM
+	scmMap map[string]scm.SCM
 	//DBEngine *xorm.Engine
 }
 
@@ -25,7 +24,7 @@ type Options struct {
 	KubernetesInCluster bool
 	Driver string
 	DataSource string
-	SCMMap map[models.SCMType]scm.SCM
+	SCMMap map[string]scm.SCM
 }
 
 func New(opts *Options) (*DefaultManager, error) {
@@ -73,7 +72,7 @@ func New(opts *Options) (*DefaultManager, error) {
 
 }
 
-func (m *DefaultManager) GetSCM(scm models.SCMType) scm.SCM {
+func (m *DefaultManager) GetSCM(scm string) scm.SCM {
 	return m.scmMap[scm]
 }
 

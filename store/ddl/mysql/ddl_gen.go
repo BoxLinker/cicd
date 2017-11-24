@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"database/sql"
-	"github.com/Sirupsen/logrus"
 )
 
 var migrations = []struct {
@@ -27,7 +26,6 @@ func Migrate(db *sql.DB) error {
 	}
 	completed, err := selectCompleted(db)
 	if err != nil && err != sql.ErrNoRows {
-		logrus.Errorf("2> %s", err.Error())
 		return err
 	}
 	for _, migration := range migrations {
@@ -37,11 +35,9 @@ func Migrate(db *sql.DB) error {
 		}
 
 		if _, err := db.Exec(migration.stmt); err != nil {
-			logrus.Errorf("3> %s", err.Error())
 			return err
 		}
 		if err := insertMigration(db, migration.name); err != nil {
-			logrus.Errorf("4> %s", err.Error())
 			return err
 		}
 
@@ -102,11 +98,11 @@ SELECT name FROM migrations
 var createTableUsers = `
 CREATE TABLE IF NOT EXISTS scm_users (
  user_id                  INTEGER PRIMARY KEY AUTO_INCREMENT
-,user_center_id           INTEGER
+,user_center_id           VARCHAR(250) NOT NULL
 ,user_scm                 VARCHAR(250)
-,user_login           VARCHAR(250)
-,user_email           VARCHAR(250)
-,access_token    VARCHAR(500)
+,user_login               VARCHAR(250) NOT NULL
+,user_email               VARCHAR(250)
+,access_token             VARCHAR(500) NOT NULL
 ,created_unix             INTEGER
 ,updated_unix             INTEGER
 
@@ -121,10 +117,10 @@ CREATE TABLE IF NOT EXISTS scm_users (
 var createTableRepos = `
 CREATE TABLE IF NOT EXISTS repos (
  repo_id              INTEGER PRIMARY KEY AUTO_INCREMENT
-,repo_user_id         INTEGER
-,repo_owner           VARCHAR(250)
-,repo_name            VARCHAR(250)
-,repo_full_name       VARCHAR(250)
+,repo_user_id         VARCHAR(250) NOT NULL
+,repo_owner           VARCHAR(250) NOT NULL
+,repo_name            VARCHAR(250) NOT NULL
+,repo_full_name       VARCHAR(250) NOT NULL
 ,repo_scm             VARCHAR(250)
 ,repo_link_url        VARCHAR(250)
 ,repo_clone_Url       VARCHAR(250)

@@ -2,10 +2,10 @@
 
 CREATE TABLE IF NOT EXISTS repos (
  repo_id              INTEGER PRIMARY KEY AUTO_INCREMENT
-,repo_user_id         INTEGER
-,repo_owner           VARCHAR(250)
-,repo_name            VARCHAR(250)
-,repo_full_name       VARCHAR(250)
+,repo_user_id         VARCHAR(250) NOT NULL
+,repo_owner           VARCHAR(250) NOT NULL
+,repo_name            VARCHAR(250) NOT NULL
+,repo_full_name       VARCHAR(250) NOT NULL
 ,repo_scm             VARCHAR(250)
 ,repo_link_url        VARCHAR(250)
 ,repo_clone_Url       VARCHAR(250)

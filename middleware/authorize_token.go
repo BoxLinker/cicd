@@ -6,29 +6,34 @@ import (
 	"golang.org/x/net/context"
 	"github.com/Sirupsen/logrus"
 	"github.com/BoxLinker/cicd/auth"
+	"github.com/cabernety/gopkg/httplib"
 )
 
-type AuthAPITokenRequired struct {
+type AuthorizeTokenRequired struct {
 	authUrl string
+	redirectURL string
+
 }
 
-func NewAuthAPITokenRequired(url string) Middleware {
-	return &AuthAPITokenRequired{
+func NewAuthorizeTokenRequired(url string, redirectURL string) Middleware {
+	return &AuthorizeTokenRequired{
 		authUrl: url,
+		redirectURL: redirectURL,
 	}
 }
 
-func (a *AuthAPITokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
-	token := r.Header.Get("X-Access-Token")
+func (a *AuthorizeTokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+	token := httplib.GetCookie(r, "X-Access-Token")
 	logrus.Debugf("request token (%s)", token)
 	if token == "" {
-		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
+		http.Redirect(w, r, a.redirectURL, 301)
 		return
 	}
 	logrus.Debugf("AuthToken url: %s", a.authUrl)
 	result, err := auth.TokenAuth(a.authUrl, token)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil, err.Error())
+		logrus.Errorf("AuthToken err: %s", err.Error())
+		http.Redirect(w, r, a.redirectURL, 301)
 		return
 	}
 	if result.Status == boxlinker.STATUS_OK && next != nil {
@@ -36,7 +41,8 @@ func (a *AuthAPITokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *htt
 		next(w, r.WithContext(context.WithValue(r.Context(), "user", result.Results)))
 	} else {
 		logrus.Debugf("AuthToken failed: %+v", result)
-		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
+		http.Redirect(w, r, a.redirectURL, 301)
+		return
 	}
 }
 

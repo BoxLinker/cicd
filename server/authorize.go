@@ -4,13 +4,15 @@ import (
 	"net/http"
 	"github.com/Sirupsen/logrus"
 	"fmt"
-	"github.com/BoxLinker/boxlinker-api"
 	"github.com/BoxLinker/cicd/models"
+	"github.com/gorilla/mux"
 )
 
 func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
-	scmType := models.SCMType(boxlinker.GetQueryParam(r, "scm"))
-	if scmType == "" || !scmType.Exists() {
+	scmType := mux.Vars(r)["scm"]
+	logrus.Debugf("SCM Auth (%s)", scmType)
+	logrus.Debugf("scmType (%+v) exists (%+v)", scmType, models.SCMExists(scmType))
+	if scmType == "" || !models.SCMExists(scmType) {
 		http.Error(w, "wrong scm type", http.StatusBadRequest)
 		return
 	}
@@ -31,7 +33,14 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 	scmUser.UCenterID = uid
 
 	if u := s.Manager.GetSCMUserByUCenterID(scmUser.UCenterID, scmUser.SCM); u != nil {
-		if err := s.Manager.UpdateSCMUser(scmUser); err != nil {
+		if u.ID <= 0 {
+			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, "user id is 0"), 301)
+			return
+		}
+		u.Login = scmUser.Login
+		u.Email = scmUser.Email
+		u.AccessToken = scmUser.AccessToken
+		if err := s.Manager.UpdateSCMUser(u); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, err.Error()), 301)
 			return
 		}

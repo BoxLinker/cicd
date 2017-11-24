@@ -1,12 +1,11 @@
 package models
 
-type SCMType string
 const (
-	GITHUB SCMType = "github"
-	GITLAB SCMType = "gitlab"
+	GITHUB = "github"
+	GITLAB = "gitlab"
 )
 
-func (s SCMType) Exists() bool {
+func SCMExists(s string) bool {
 	switch s {
 	case GITHUB, GITLAB:
 		return true

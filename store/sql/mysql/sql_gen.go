@@ -13,7 +13,8 @@ var index = map[string]string{
 }
 
 var repoInsertIgnore = `
-INSERT IGNORE INTO repos {
+INSERT IGNORE INTO repos (
+  repo_user_id,
   repo_owner,
   repo_name,
   repo_full_name,
@@ -24,7 +25,7 @@ INSERT IGNORE INTO repos {
   repo_is_private,
   created_unix,
   updated_unix
-} VALUES (?,?,?,?,?,?,?,?,?,?)
+) VALUES (?,?,?,?,?,?,?,?,?,?,?)
 `
 
 var repoFindUser = `
@@ -40,7 +41,7 @@ SELECT
 ,repo_default_branch
 ,repo_is_private
 ,created_unix
-,updated_nix
+,updated_unix
 FROM repos
 WHERE repo_user_id = ?
 ORDER BY repo_name ASC

@@ -8,17 +8,17 @@ import (
 )
 
 func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
-	logrus.Debugf("GetRepos ==>")
 	flush, _ := strconv.ParseBool(boxlinker.GetQueryParam(r, "flush"))
 	pc := boxlinker.ParsePageConfig(r)
 	u := s.getUserInfo(r)
+	logrus.Debugf("GetRepos (%s)", u.SCM)
 
 	if flush {
 		if repos, err := s.Manager.GetSCM(u.SCM).Repos(u); err != nil {
 			boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
 		} else {
-			if err := s.Manager.RepoBatch(repos); err != nil {
+			if err := s.Manager.RepoBatch(u, repos); err != nil {
 				boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 				return
 			}
