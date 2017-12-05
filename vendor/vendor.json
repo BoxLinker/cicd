@@ -403,6 +403,12 @@
 			"revisionTime": "2015-07-01T11:53:18Z"
 		},
 		{
+			"checksumSHA1": "S0DP7Pn7sZUmXc55IzZnNvERu6s=",
+			"path": "golang.org/x/sync/errgroup",
+			"revision": "fd80eb99c8f653c847d294a001bdf2a3a6f768f5",
+			"revisionTime": "2017-11-01T19:49:15Z"
+		},
+		{
 			"checksumSHA1": "ocQvX+Oc2X7QEYaFB18/Q8uPMLc=",
 			"origin": "k8s.io/client-go/vendor/golang.org/x/sys/unix",
 			"path": "golang.org/x/sys/unix",

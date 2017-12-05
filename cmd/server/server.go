@@ -6,6 +6,8 @@ import (
 	cicdServer "github.com/BoxLinker/cicd/server"
 	"os"
 	"github.com/BoxLinker/cicd/manager"
+	"golang.org/x/sync/errgroup"
+	"net"
 )
 
 var flags = []cli.Flag{
@@ -167,18 +169,31 @@ func server(c *cli.Context) error {
 		return err
 	}
 
-	// setup codebase
+	var g errgroup.Group
 
-	cs := new(cicdServer.Server)
-	//cs.CodeBase = cb
-	cs.Manager = controllerManager
-	cs.Listen = c.String("listen")
-	cs.Config = cicdServer.Config{
-		TokenAuthURL: c.String("token-auth-url"),
-		HomeHost: c.String("home-host"),
-	}
+	g.Go(func ()error{
+		cs := new(cicdServer.Server)
+		//cs.CodeBase = cb
+		cs.Manager = controllerManager
+		cs.Listen = c.String("listen")
+		cs.Config = cicdServer.Config{
+			TokenAuthURL: c.String("token-auth-url"),
+			HomeHost: c.String("home-host"),
+		}
 
-	return cs.Run()
+		return cs.Run()
+	})
+
+	g.Go(func() error {
+		lis, err := net.Listen("tcp", ":9000")
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		
+	})
+
+	return g.Wait()
 }
 
 func before(c *cli.Context) error { return nil }
