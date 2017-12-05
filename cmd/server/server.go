@@ -190,7 +190,8 @@ func server(c *cli.Context) error {
 			logrus.Error(err)
 			return err
 		}
-		
+
+		return nil
 	})
 
 	return g.Wait()
