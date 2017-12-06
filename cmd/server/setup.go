@@ -5,7 +5,13 @@ import (
 	"github.com/BoxLinker/cicd/scm"
 	"github.com/BoxLinker/cicd/scm/github"
 	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/store"
+	"github.com/BoxLinker/cicd/queue"
 )
+
+func setupQueue(c *cli.Context, s store.Store) queue.Queue {
+	return models.WithTaskStore(queue.New(), s)
+}
 
 func SetupCodeBase(c *cli.Context) (map[string]scm.SCM, error) {
 	m := map[string]scm.SCM{}

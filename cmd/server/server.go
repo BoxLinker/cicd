@@ -8,6 +8,15 @@ import (
 	"github.com/BoxLinker/cicd/manager"
 	"golang.org/x/sync/errgroup"
 	"net"
+	"google.golang.org/grpc"
+	"context"
+	"google.golang.org/grpc/metadata"
+	oldcontext "golang.org/x/net/context"
+	"errors"
+	"github.com/BoxLinker/cicd/store/datastore"
+	"github.com/BoxLinker/cicd/pipeline/rpc/proto"
+	"github.com/BoxLinker/cicd/logging"
+	"github.com/BoxLinker/cicd/pubsub"
 )
 
 var flags = []cli.Flag{
@@ -39,32 +48,6 @@ var flags = []cli.Flag{
 		EnvVar: "DATABASE_DATASOURCE",
 		Name: "database-datasource",
 	},
-	//cli.StringFlag{
-	//	EnvVar: "DB_TYPE",
-	//	Name: "db-type",
-	//	Value: "mysql",
-	//	Usage: "what db you used to connect",
-	//},
-	//cli.StringFlag{
-	//	EnvVar: "DB_USER",
-	//	Name: "db-user",
-	//},
-	//cli.StringFlag{
-	//	EnvVar: "DB_PASSWORD",
-	//	Name: "db-password",
-	//},
-	//cli.StringFlag{
-	//	EnvVar: "DB_NAME",
-	//	Name: "db-name",
-	//},
-	//cli.StringFlag{
-	//	EnvVar: "DB_HOST",
-	//	Name: "db-host",
-	//},
-	//cli.IntFlag{
-	//	EnvVar: "DB_PORT",
-	//	Name: "db-port",
-	//},
 	cli.StringFlag{
 		EnvVar: "TOKEN_AUTH_URL",
 		Name: "token-auth-url",
@@ -88,6 +71,10 @@ var flags = []cli.Flag{
 	cli.StringSliceFlag{
 		EnvVar: "GITHUB_SCOPE",
 		Name: "github-scope",
+	},
+	cli.StringFlag{
+		EnvVar: "AGENT_SECRET",
+		Name: "agent-secret",
 	},
 }
 
@@ -158,9 +145,10 @@ func server(c *cli.Context) error {
 		return err
 	}
 
+	dataStore := datastore.New(c.String("database-driver"), c.String("database-datasource"))
+
 	controllerManager, err := manager.New(&manager.Options{
-		Driver: c.String("database-driver"),
-		DataSource: c.String("database-datasource"),
+		Store: dataStore,
 		KubernetesInCluster: c.Bool("kubernetes-in-cluster"),
 		SCMMap: scmMap,
 	})
@@ -191,10 +179,64 @@ func server(c *cli.Context) error {
 			return err
 		}
 
+		auther := &authorizer{
+			password: c.String("agent-secret"),
+		}
+
+		s := grpc.NewServer(
+			grpc.StreamInterceptor(auther.streamInterceptor),
+			grpc.UnaryInterceptor(auther.unaryInterceptor),
+		)
+
+		ss := new(cicdServer.RPCServer)
+		ss.Queue = setupQueue(c, dataStore)
+		ss.Logger = logging.New()
+		ss.Pubsub = pubsub.New()
+		ss.Store = dataStore
+
+
+
+		proto.RegisterHelloServer(s, ss)
+
+		err = s.Serve(lis)
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
 		return nil
 	})
 
 	return g.Wait()
+}
+
+type authorizer struct {
+	username string
+	password string
+}
+
+func (a *authorizer) streamInterceptor(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	if err := a.authorize(stream.Context()); err != nil {
+		return err
+	}
+	return handler(srv, stream)
+}
+
+// func(ctx context.Context, req interface{}, info *UnaryServerInfo, handler UnaryHandler) (resp interface{}, err error)
+func (a *authorizer) unaryInterceptor(ctx oldcontext.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	if err := a.authorize(ctx); err != nil {
+		return nil, err
+	}
+	return handler(ctx, req)
+}
+
+func (a *authorizer) authorize(ctx context.Context) error {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if len(md["password"]) > 0 && md["password"][0] == a.password {
+			return nil
+		}
+		return errors.New("invalid agent token")
+	}
+	return errors.New("missing agent token")
 }
 
 func before(c *cli.Context) error { return nil }

@@ -14,7 +14,7 @@ import (
 )
 
 type DefaultManager struct {
-	dataStore *store.DataStore
+	dataStore store.Store
 	clientSet *kubernetes.Clientset
 	scmMap map[string]scm.SCM
 	//DBEngine *xorm.Engine
@@ -24,6 +24,7 @@ type Options struct {
 	KubernetesInCluster bool
 	Driver string
 	DataSource string
+	Store store.Store
 	SCMMap map[string]scm.SCM
 }
 
@@ -65,7 +66,7 @@ func New(opts *Options) (*DefaultManager, error) {
 	}
 
 	return &DefaultManager{
-		dataStore: store.New(opts.Driver, opts.DataSource),
+		dataStore: opts.Store,
 		clientSet: clientSet,
 		scmMap: opts.SCMMap,
 	}, nil
