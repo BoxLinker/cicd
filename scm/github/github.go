@@ -187,3 +187,7 @@ func (c *client) newClientToken(token string) *github.Client {
 	githubClient.BaseURL, _ = url.Parse(c.API)
 	return githubClient
 }
+
+func (c *client) Hook(r *http.Request) (*models.Repo, *models.Build, error) {
+	return parseHook(r, c.MergeRef)
+}

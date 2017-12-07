@@ -27,3 +27,7 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 
 	boxlinker.Resp(w, boxlinker.STATUS_OK, pc.PaginationResult(s.Manager.QueryRepos(u, &pc)))
 }
+
+func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
+
+}

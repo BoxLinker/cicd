@@ -35,9 +35,13 @@ func (s *Server) Run() error {
 	scmRequired := middleware.NewSCMRequired()
 	authorizeTokenM := middleware.NewAuthorizeTokenRequired(s.Config.TokenAuthURL, fmt.Sprintf("%s/login", s.Config.HomeHost))
 
+	hookRouter := mux.NewRouter()
+	hookRouter.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
+	globalMux.Handle("/v1/cicd/hook", hookRouter)
 
 	apiRouter := mux.NewRouter()
 	apiRouter.HandleFunc("/v1/cicd/auth/repos", s.GetRepos).Methods("GET")
+	apiRouter.HandleFunc("/v1/cicd/auth/repos/{owner}/{name}", s.PostRepo).Methods("POST")
 
 	authRouter := negroni.New()
 	authRouter.Use(negroni.HandlerFunc(scmRequired.HandlerFuncWithNext))

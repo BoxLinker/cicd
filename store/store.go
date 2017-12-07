@@ -11,6 +11,7 @@ type Store interface {
 
 	RepoList(u *models.SCMUser) ([]*models.Repo)
 	RepoBatch(user *models.SCMUser, repos []*models.Repo) error
+	GetRepoOwnerName(owner, repoName string) (*models.Repo, error)
 
 	TaskList() ([]*models.Task, error)
 	TaskInsert(*models.Task) error

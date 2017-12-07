@@ -48,3 +48,7 @@ func (db *datastore) RepoBatch(user *models.SCMUser, repos []*models.Repo) error
 	}
 	return nil
 }
+
+func (db *datastore) GetRepoOwnerName(owner, repoName string) (*models.Repo, error) {
+
+}

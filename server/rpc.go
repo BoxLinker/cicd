@@ -19,4 +19,9 @@ type RPCServer struct {
 	Store store.Store
 }
 
-func (s *RPCServer) Next(c oldcontext.Context, req *proto)
+func (s *RPCServer) SayHello(c oldcontext.Context, req *proto.HelloRequest) (*proto.HelloReply, error) {
+	resp := new(proto.HelloReply)
+	resp.Message = "Hello " + req.Name + "."
+	return resp, nil
+}
+
