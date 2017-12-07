@@ -42,6 +42,37 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	repo, err := s.Manager.GetRepoOwnerName(tmpRepo.Owner, tmpRepo.Name)
+	if err != nil {
+		logrus.Errorf("failed to find repo %s/%s from hook. %s", tmpRepo.Owner, tmpRepo.Name, err)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	// todo check whether repo is active
+
+	// todo get the token and verify the hook is authroized
+
+	if repo.UserID == 0 {
+		logrus.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
+		w.WriteHeader(204)
+		return
+	}
+
+	var skipped = true
+	if (build.Event == models.EventPush && repo.AllowPush) ||
+		(build.Event == models.EventPull && repo.AllowPull) ||
+		(build.Event == models.EventDeploy && repo.AllowDeploy) ||
+		(build.Event == models.EventTag && repo.AllowTag) {
+			skipped = false
+	}
+
+	if skipped {
+		logrus.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
+		w.WriteHeader(204)
+		return
+	}
+
 
 
 }

@@ -8,6 +8,8 @@ func Lookup(name string) string {
 var index = map[string]string{
 	"repo-insert-ignore":        repoInsertIgnore,
 	"repo-find-user":            repoFindUser,
+	"repo-find-fullName":        repoFindFullName,
+	"repo-del-id":               repoDelId,
 	"scm_user-find-u_center_id": scmuserFindUcenterid,
 	"scm_user-update":           scmuserUpdate,
 	"task-list":                 taskList,
@@ -47,6 +49,17 @@ SELECT
 FROM repos
 WHERE repo_user_id = ?
 ORDER BY repo_name ASC
+`
+
+var repoFindFullName = `
+SELECT * FROM repos
+WHERE repo_full_name = ?
+LIMIT 1
+`
+
+var repoDelId = `
+DELETE FROM repos
+WHERE repo_id = ?
 `
 
 var scmuserFindUcenterid = `

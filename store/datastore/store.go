@@ -19,6 +19,8 @@ const (
 	SQLSCMUsersFindByUCenterID = "scm_user-find-u_center_id"
 	SQLQueryReposByUserID = "repo-find-user"
 	SQLRepoBatch = "repo-insert-ignore"
+	SQLRepoFindFullName = "repo-find-fullName"
+	SQLRepoDelID = "repo-del-id"
 )
 
 type datastore struct {

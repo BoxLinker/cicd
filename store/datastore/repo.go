@@ -6,6 +6,7 @@ import (
 	"github.com/russross/meddler"
 	"github.com/Sirupsen/logrus"
 	"time"
+	"fmt"
 )
 
 func (db *datastore) RepoList(u *models.SCMUser) ([]*models.Repo) {
@@ -50,5 +51,8 @@ func (db *datastore) RepoBatch(user *models.SCMUser, repos []*models.Repo) error
 }
 
 func (db *datastore) GetRepoOwnerName(owner, repoName string) (*models.Repo, error) {
-
+	stmt := sql.Lookup(db.driver, SQLRepoFindFullName)
+	var repo = new(models.Repo)
+	var err = meddler.QueryRow(db, repo, rebind(stmt), fmt.Sprintf("%s/%s", owner, repoName))
+	return repo, err
 }

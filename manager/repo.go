@@ -13,3 +13,7 @@ func (m *DefaultManager) RepoBatch(user *models.SCMUser, repos []*models.Repo) e
 func (m *DefaultManager) QueryRepos(u *models.SCMUser, pc *boxlinker.PageConfig) ([]*models.Repo) {
 	return m.dataStore.RepoList(u)
 }
+
+func (m *DefaultManager) GetRepoOwnerName(owner, repoName string) (*models.Repo, error) {
+	return m.dataStore.GetRepoOwnerName(owner, repoName)
+}

@@ -33,3 +33,14 @@ SELECT
 FROM repos
 WHERE repo_user_id = ?
 ORDER BY repo_name ASC
+
+-- name: repo-find-fullName
+
+SELECT * FROM repos
+WHERE repo_full_name = ?
+LIMIT 1
+
+-- name: repo-del-id
+
+DELETE FROM repos
+WHERE repo_id = ?

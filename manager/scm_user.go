@@ -12,6 +12,10 @@ func (m *DefaultManager) GetSCMUserByUCenterID(uCenterID string, scm string) *mo
 	return m.dataStore.GetSCMUserByUCenterID(uCenterID, scm)
 }
 
+func (m *DefaultManager) GetSCMUserByID(id, scm string) *models.SCMUser {
+
+}
+
 func (m *DefaultManager) UpdateSCMUser(user *models.SCMUser) error {
 	return m.dataStore.UpdateSCMUser(user)
 }

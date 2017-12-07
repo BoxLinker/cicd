@@ -16,6 +16,13 @@ type Repo struct {
 	Branch 	string		`json:"default_branch"      meddler:"repo_default_branch"`
 	IsPrivate bool 		`json:"is_private"          meddler:"repo_is_private"`
 
+	IsActive    bool   `json:"active"                   meddler:"repo_active"`
+	AllowPull   bool   `json:"allow_pr"                 meddler:"repo_allow_pr"`
+	AllowPush   bool   `json:"allow_push"               meddler:"repo_allow_push"`
+	AllowDeploy bool   `json:"allow_deploys"            meddler:"repo_allow_deploys"`
+	AllowTag    bool   `json:"allow_tags"               meddler:"repo_allow_tags"`
+
+
 	Created     time.Time `json:"created"           meddler:"-"`
 	CreatedUnix int64 	`json:"-"                   meddler:"created_unix"`
 	Updated     time.Time `json:"updated"           meddler:"-"`

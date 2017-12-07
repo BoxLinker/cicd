@@ -30,6 +30,8 @@ func (db *datastore) GetSCMUserByUCenterID(uCenterID string, scm string) *models
 	return u
 }
 
+func (db *datastore) GetSCMUserByID(id int64) {}
+
 func (db *datastore) UpdateSCMUser(user *models.SCMUser) error {
 	user.Updated = time.Now()
 	user.UpdatedUnix = user.Updated.Unix()
