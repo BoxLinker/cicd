@@ -32,7 +32,7 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 	uid := s.getCtxUserID(r)
 	scmUser.UCenterID = uid
 
-	if u := s.Manager.GetSCMUserByUCenterID(scmUser.UCenterID, scmUser.SCM); u != nil {
+	if u := s.Manager.GetUserByUCenterID(scmUser.UCenterID, scmUser.SCM); u != nil {
 		if u.ID <= 0 {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, "user id is 0"), 301)
 			return
@@ -40,12 +40,12 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 		u.Login = scmUser.Login
 		u.Email = scmUser.Email
 		u.AccessToken = scmUser.AccessToken
-		if err := s.Manager.UpdateSCMUser(u); err != nil {
+		if err := s.Manager.UpdateUser(u); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, err.Error()), 301)
 			return
 		}
 	} else {
-		if err := s.Manager.SaveSCMUser(scmUser); err != nil {
+		if err := s.Manager.SaveUser(scmUser); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, err.Error()), 301)
 			return
 		}

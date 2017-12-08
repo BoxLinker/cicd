@@ -10,12 +10,29 @@ import (
 const defaultBranch = "master"
 
 const (
+	statusPending = "pending"
+	statusSuccess = "success"
+	statusFailure = "failure"
+	statusError   = "error"
+)
+
+const (
+	descPending  = "this build is pending"
+	descSuccess  = "the build was successful"
+	descFailure  = "the build failed"
+	descBlocked  = "the build requires approval"
+	descDeclined = "the build was rejected"
+	descError    = "oops, something went wrong"
+)
+
+
+const (
 	headRefs  = "refs/pull/%d/head"  // pull request unmerged
 	mergeRefs = "refs/pull/%d/merge" // pull request merged with base
 	refspec   = "%s:%s"
 )
 
-func convertRepoList(from []github.Repository, u *models.SCMUser) []*models.Repo {
+func convertRepoList(from []github.Repository, u *models.User) []*models.Repo {
 	var repos []*models.Repo
 	for _, repo := range from {
 		repos = append(repos, convertRepo(&repo, u))
@@ -23,7 +40,7 @@ func convertRepoList(from []github.Repository, u *models.SCMUser) []*models.Repo
 	return repos
 }
 
-func convertRepo(form *github.Repository, u *models.SCMUser) *models.Repo {
+func convertRepo(form *github.Repository, u *models.User) *models.Repo {
 	repo := &models.Repo{
 		UserID: u.ID,
 		Name: *form.Name,
@@ -148,4 +165,39 @@ func convertPullHook(from *webhook, merge bool) *models.Build {
 		build.Ref = fmt.Sprintf(mergeRefs, from.PullRequest.Number)
 	}
 	return build
+}
+
+
+// convertStatus is a helper function used to convert a Drone status to a
+// GitHub commit status.
+func convertStatus(status string) string {
+	switch status {
+	case models.StatusPending, models.StatusRunning, models.StatusBlocked:
+		return statusPending
+	case models.StatusFailure, models.StatusDeclined:
+		return statusFailure
+	case models.StatusSuccess:
+		return statusSuccess
+	default:
+		return statusError
+	}
+}
+
+// convertDesc is a helper function used to convert a Drone status to a
+// GitHub status description.
+func convertDesc(status string) string {
+	switch status {
+	case models.StatusPending, models.StatusRunning:
+		return descPending
+	case models.StatusSuccess:
+		return descSuccess
+	case models.StatusFailure:
+		return descFailure
+	case models.StatusBlocked:
+		return descBlocked
+	case models.StatusDeclined:
+		return descDeclined
+	default:
+		return descError
+	}
 }

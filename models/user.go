@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type SCMUser struct {
+type User struct {
 	ID int64 `meddler:"user_id,pk" json:"id"`
 	UCenterID string `meddler:"user_center_id" json:"u_center_id"`
 	Login string `meddler:"user_login" json:"login"`

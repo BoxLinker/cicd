@@ -9,7 +9,13 @@ import (
 	"fmt"
 )
 
-func (db *datastore) RepoList(u *models.SCMUser) ([]*models.Repo) {
+func (db *datastore) GetRepo(id int64) (*models.Repo, error) {
+	var repo = new(models.Repo)
+	var err = meddler.Load(db, "repos", repo, id)
+	return repo, err
+}
+
+func (db *datastore) RepoList(u *models.User) ([]*models.Repo) {
 	stmt := sql.Lookup(db.driver, SQLQueryReposByUserID)
 	data := make([]*models.Repo, 0)
 	if err := meddler.QueryAll(db, &data, stmt, u.ID); err != nil {
@@ -23,7 +29,7 @@ func (db *datastore) RepoList(u *models.SCMUser) ([]*models.Repo) {
 	return data
 }
 
-func (db *datastore) RepoBatch(user *models.SCMUser, repos []*models.Repo) error {
+func (db *datastore) RepoBatch(user *models.User, repos []*models.Repo) error {
 	stmt := sql.Lookup(db.driver, SQLRepoBatch)
 	for _, repo := range repos {
 		repo.UserID = user.ID

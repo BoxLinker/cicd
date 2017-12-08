@@ -100,7 +100,7 @@ SELECT name FROM migrations
 //
 
 var createTableUsers = `
-CREATE TABLE IF NOT EXISTS scm_users (
+CREATE TABLE IF NOT EXISTS users (
  user_id                  INTEGER PRIMARY KEY AUTO_INCREMENT
 ,user_center_id           VARCHAR(250) NOT NULL
 ,user_scm                 VARCHAR(250)

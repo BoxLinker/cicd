@@ -60,6 +60,30 @@
 			"revisionTime": "2017-07-19T03:38:15Z"
 		},
 		{
+			"checksumSHA1": "VTxWyFud/RedrpllGdQonVtGM/A=",
+			"origin": "github.com/docker/libcompose/vendor/github.com/docker/docker/api/types/strslice",
+			"path": "github.com/docker/docker/api/types/strslice",
+			"revision": "57bd716502dcbe1799f026148016022b0f3b989c",
+			"revisionTime": "2017-10-25T08:38:09Z"
+		},
+		{
+			"checksumSHA1": "Pv1NbtDY4wETwwSD2DsI+s8de/I=",
+			"origin": "github.com/docker/libcompose/vendor/github.com/docker/go-units",
+			"path": "github.com/docker/go-units",
+			"revision": "57bd716502dcbe1799f026148016022b0f3b989c",
+			"revisionTime": "2017-10-25T08:38:09Z"
+		},
+		{
+			"path": "github.com/docker/libcompose",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "SL+jCUHHU7clR330N6qe3O0Csek=",
+			"path": "github.com/docker/libcompose/yaml",
+			"revision": "57bd716502dcbe1799f026148016022b0f3b989c",
+			"revisionTime": "2017-10-25T08:38:09Z"
+		},
+		{
 			"checksumSHA1": "95WQb+qcV7gHpUvZymh7TssLh1Q=",
 			"origin": "k8s.io/apimachinery/vendor/github.com/emicklei/go-restful",
 			"path": "github.com/emicklei/go-restful",
@@ -79,6 +103,13 @@
 			"path": "github.com/emicklei/go-restful/log",
 			"revision": "6134cb2da6d90597b0434e349f90f94fafc9ae51",
 			"revisionTime": "2017-07-19T03:38:15Z"
+		},
+		{
+			"checksumSHA1": "rrAE79eyiEzLoAjj4MzB/A3/jwM=",
+			"origin": "github.com/docker/libcompose/vendor/github.com/flynn/go-shlex",
+			"path": "github.com/flynn/go-shlex",
+			"revision": "57bd716502dcbe1799f026148016022b0f3b989c",
+			"revisionTime": "2017-10-25T08:38:09Z"
 		},
 		{
 			"checksumSHA1": "17vYJDDMJO63/G/tRFIUuSlMCbE=",

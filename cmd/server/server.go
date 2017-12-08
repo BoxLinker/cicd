@@ -147,10 +147,17 @@ func server(c *cli.Context) error {
 
 	dataStore := datastore.New(c.String("database-driver"), c.String("database-datasource"))
 
+	logs := logging.New()
+	queues := setupQueue(c, dataStore)
+	pubsubs := pubsub.New()
+
 	controllerManager, err := manager.New(&manager.Options{
 		Store: dataStore,
 		KubernetesInCluster: c.Bool("kubernetes-in-cluster"),
 		SCMMap: scmMap,
+		Logs: logs,
+		Queue: queues,
+		Pubsub: pubsubs,
 	})
 
 	if err != nil {
@@ -189,9 +196,9 @@ func server(c *cli.Context) error {
 		)
 
 		ss := new(cicdServer.RPCServer)
-		ss.Queue = setupQueue(c, dataStore)
-		ss.Logger = logging.New()
-		ss.Pubsub = pubsub.New()
+		ss.Queue = queues
+		ss.Logger = logs
+		ss.Pubsub = pubsubs
 		ss.Store = dataStore
 
 

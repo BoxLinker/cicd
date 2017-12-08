@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func (db *datastore) SaveSCMUser(user *models.SCMUser) error {
-	logrus.Debugf("SaveSCMUser (%+v)", user)
+func (db *datastore) SaveUser(user *models.User) error {
+	logrus.Debugf("SaveUser (%+v)", user)
 	user.Created = time.Now()
 	user.CreatedUnix = user.Created.Unix()
 	user.Updated = time.Now()
@@ -17,22 +17,30 @@ func (db *datastore) SaveSCMUser(user *models.SCMUser) error {
 	return meddler.Insert(db, TableSCMUsers, user)
 }
 
-func (db *datastore) GetSCMUserByUCenterID(uCenterID string, scm string) *models.SCMUser {
+func (db *datastore) GetUserByUCenterID(uCenterID string, scm string) *models.User {
 	stmt := sql.Lookup(db.driver, SQLSCMUsersFindByUCenterID)
-	u := new(models.SCMUser)
+	u := new(models.User)
 	if err := meddler.QueryRow(db, u, stmt, uCenterID, scm); err != nil {
-		logrus.Errorf("GetSCMUserByUCenterID err (%s)", err.Error())
+		logrus.Errorf("GetUserByUCenterID err (%s)", err.Error())
 		return nil
 	}
 	u.Created = time.Unix(u.CreatedUnix, 0)
 	u.Updated = time.Unix(u.UpdatedUnix, 0)
-	logrus.Debugf("GetSCMUserByUCenterID (%+v)", u)
+	logrus.Debugf("GetUserByUCenterID (%+v)", u)
 	return u
 }
 
-func (db *datastore) GetSCMUserByID(id int64) {}
+func (db *datastore) GetUserByIDAndSCM(id int64, scm string) (*models.User, error) {
+	stmt := sql.Lookup(db.driver, SQLUserFindByIDSCM)
+	u := new(models.User)
+	if err := meddler.QueryRow(db, u, stmt, id, scm); err != nil {
+		logrus.Errorf("GetUserByIDAndSCM err (%s)", err.Error())
+		return nil, err
+	}
+	return u, nil
+}
 
-func (db *datastore) UpdateSCMUser(user *models.SCMUser) error {
+func (db *datastore) UpdateUser(user *models.User) error {
 	user.Updated = time.Now()
 	user.UpdatedUnix = user.Updated.Unix()
 	return meddler.Update(db, TableSCMUsers, user)

@@ -17,6 +17,8 @@ const (
 
 const (
 	SQLSCMUsersFindByUCenterID = "scm_user-find-u_center_id"
+	SQLUserFindByIDSCM = "user-find-id-scm"
+
 	SQLQueryReposByUserID = "repo-find-user"
 	SQLRepoBatch = "repo-insert-ignore"
 	SQLRepoFindFullName = "repo-find-fullName"

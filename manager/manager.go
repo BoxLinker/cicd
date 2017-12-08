@@ -11,13 +11,19 @@ import (
 	"os"
 	"github.com/BoxLinker/cicd/store"
 	"github.com/BoxLinker/cicd/scm"
+	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/logging"
+	"github.com/BoxLinker/cicd/queue"
+	"github.com/BoxLinker/cicd/pubsub"
 )
 
 type DefaultManager struct {
 	dataStore store.Store
 	clientSet *kubernetes.Clientset
 	scmMap map[string]scm.SCM
-	//DBEngine *xorm.Engine
+	logs logging.Log
+	queue queue.Queue
+	pubsub pubsub.Publisher
 }
 
 type Options struct {
@@ -25,6 +31,9 @@ type Options struct {
 	Driver string
 	DataSource string
 	Store store.Store
+	Logs logging.Log
+	Queue queue.Queue
+	Pubsub pubsub.Publisher
 	SCMMap map[string]scm.SCM
 }
 
@@ -69,6 +78,9 @@ func New(opts *Options) (*DefaultManager, error) {
 		dataStore: opts.Store,
 		clientSet: clientSet,
 		scmMap: opts.SCMMap,
+		logs: opts.Logs,
+		queue: opts.Queue,
+		pubsub: opts.Pubsub,
 	}, nil
 
 }
@@ -77,6 +89,24 @@ func (m *DefaultManager) GetSCM(scm string) scm.SCM {
 	return m.scmMap[scm]
 }
 
+func (m *DefaultManager) ConfigStore() models.ConfigStore {
+	return m.dataStore
+}
+
+func (m *DefaultManager) Logs() logging.Log {
+	return m.logs
+}
+func (m *DefaultManager) Pubsub() pubsub.Publisher {
+	return m.pubsub
+}
+
+func (m *DefaultManager) Queue() queue.Queue {
+	return m.queue
+}
+
+func (m *DefaultManager) Store() store.Store {
+	return m.dataStore
+}
 
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {

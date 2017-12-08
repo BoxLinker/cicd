@@ -9,13 +9,13 @@ SELECT
 ,access_token
 ,created_unix
 ,updated_unix
-FROM scm_users
+FROM users
 WHERE user_center_id = ? AND user_scm = ?
 LIMIT 1
 
 -- name: scm_user-update
 
-UPDATE scm_users
+UPDATE users
 SET
 ,user_scm = ?
 ,user_login = ?
@@ -23,3 +23,10 @@ SET
 ,access_token = ?
 ,updated_unix = ?
 WHERE user_id = ?
+
+-- name: user-find-id-scm
+
+SELECT *
+FROM users
+WHERE user_id = ? AND user_scm = ?
+LIMIT 1

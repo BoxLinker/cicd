@@ -78,7 +78,7 @@ func (a *Server) getCtxUserID(r *http.Request) string {
 	return ctx["uid"].(string)
 }
 
-func (a *Server) getUserInfo(r *http.Request) *models.SCMUser {
+func (a *Server) getUserInfo(r *http.Request) *models.User {
 	scm := boxlinker.GetQueryParam(r, "scm")
-	return a.Manager.GetSCMUserByUCenterID(a.getCtxUserID(r), scm)
+	return a.Manager.GetUserByUCenterID(a.getCtxUserID(r), scm)
 }

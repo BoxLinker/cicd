@@ -14,6 +14,8 @@ import (
 	"crypto/tls"
 	"github.com/google/go-github/github"
 	"github.com/BoxLinker/cicd/scm"
+	"regexp"
+	"strconv"
 )
 
 const (
@@ -90,7 +92,72 @@ type client struct {
 	MergeRef    bool
 }
 
-func (c *client) Repos(u *models.SCMUser) ([]*models.Repo, error) {
+func (c *client) Status(u *models.User, r *models.Repo, b *models.Build, link string) error {
+	client := c.newClientToken(u.AccessToken)
+	switch b.Event {
+	case "deployment":
+		return deploymentStatus(client, r, b, link)
+	default:
+		return repoStatus(client, r, b, link, c.Context)
+	}
+}
+
+func repoStatus(client *github.Client, r *models.Repo, b *models.Build, link, ctx string) error {
+	context := ctx
+	switch b.Event {
+	case models.EventPull:
+		context += "/pr"
+	default:
+		if len(b.Event) > 0 {
+			context += "/" + b.Event
+		}
+	}
+
+	data := github.RepoStatus{
+		Context: 		github.String(context),
+		State: 			github.String(convertStatus(b.Status)),
+		Description: 	github.String(convertDesc(b.Status)),
+		TargetURL: 		github.String(link),
+	}
+	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, b.Commit, &data)
+	return err
+}
+
+var reDeploy = regexp.MustCompile(".+/deployments/(\\d+)")
+
+func deploymentStatus(client *github.Client, r *models.Repo, b *models.Build, link string) error {
+	matches := reDeploy.FindStringSubmatch(b.Link)
+	if len(matches) != 2 {
+		return nil
+	}
+	id, _ := strconv.Atoi(matches[1])
+
+	data := github.DeploymentStatusRequest{
+		State: 		github.String(convertStatus(b.Status)),
+		Description: github.String(convertDesc(b.Status)),
+		TargetURL: 	github.String(link),
+	}
+
+	_, _, err := client.Repositories.CreateDeploymentStatus(r.Owner, r.Name, id, &data)
+	return err
+}
+
+func (c *client) File(u *models.User, r *models.Repo, b *models.Build, f string) ([]byte, error) {
+	return c.FileRef(u, r, b.Commit, f)
+}
+
+func (c *client) FileRef(u *models.User, r *models.Repo, ref, f string) ([]byte, error) {
+	client := c.newClientToken(u.AccessToken)
+	opts := new(github.RepositoryContentGetOptions)
+	opts.Ref = ref
+	data, _, _, err := client.Repositories.GetContents(r.Owner, r.Name, f, opts)
+	if err != nil {
+		return nil, err
+	}
+	return data.Decode()
+}
+
+func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 	client := c.newClientToken(u.AccessToken)
 	opts := new(github.RepositoryListOptions)
 	opts.PerPage = 100
@@ -108,7 +175,7 @@ func (c *client) Repos(u *models.SCMUser) ([]*models.Repo, error) {
 	return repos, nil
 }
 
-func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.SCMUser, error) {
+func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.User, error) {
 
 	oauth2Config := &oauth2.Config{
 		ClientID: c.Client,
@@ -147,7 +214,7 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 	if err != nil {
 		return nil, err
 	}
-	return &models.SCMUser{
+	return &models.User{
 		Login: *user.Login,
 		Email: *user.Email,
 		Token: state,
