@@ -8,6 +8,12 @@ import (
 	"github.com/russross/meddler"
 )
 
+func (db *datastore) GetBuild(id int64) (*models.Build, error) {
+	var build = new(models.Build)
+	var err = meddler.Load(db, "builds", build, id)
+	return build, err
+}
+
 func (db *datastore) CreateBuild(build *models.Build, procs ...*models.Proc) error {
 	id, err := db.incrementRepoRetry(build.RepoID)
 	if err != nil {

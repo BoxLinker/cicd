@@ -22,3 +22,9 @@ const (
 	StatusBlocked  = "blocked"
 	StatusDeclined = "declined"
 )
+
+const (
+	VisibilityPublic   = "public"
+	VisibilityPrivate  = "private"
+	VisibilityInternal = "internal"
+)

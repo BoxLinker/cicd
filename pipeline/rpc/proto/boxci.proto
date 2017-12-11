@@ -56,7 +56,7 @@ service BoxCI {
     rpc Next    (NextRequest)   returns (NextReply) {}
     rpc Init    (InitRequest)   returns (Empty) {}
     rpc Wait    (WaitRequest)   returns (Empty) {}
-    rpc BoxCI    (BoxCIRequest)   returns (Empty) {}
+    rpc Done    (DoneRequest)   returns (Empty) {}
     rpc Extend    (ExtendRequest)   returns (Empty) {}
     rpc Update    (UpdateRequest)   returns (Empty) {}
     rpc Upload    (UploadRequest)   returns (Empty) {}
@@ -80,7 +80,7 @@ message WaitRequest {
     string id = 1;
 }
 
-message BoxCIRequest {
+message DoneRequest {
     string id = 1;
     State state = 2;
 }

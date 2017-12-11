@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/BoxLinker/cicd/models"
+	"io"
 )
 
 type Store interface {
@@ -24,8 +25,20 @@ type Store interface {
 	TaskInsert(*models.Task) error
 	TaskDelete(string) error
 
+	GetBuild(int64) (*models.Build, error)
 	CreateBuild(*models.Build, ...*models.Proc) error
 	UpdateBuild(*models.Build) error
 
 	ProcCreate([]*models.Proc) error
+	ProcLoad(int64) (*models.Proc, error)
+	ProcChild(build *models.Build, pid int, child string) (*models.Proc, error)
+	ProcUpdate(proc *models.Proc) error
+	ProcList(build *models.Build) ([]*models.Proc, error)
+
+	LogSave(proc *models.Proc, reader io.Reader) error
+
+	FileCreate(file *models.File, reader io.Reader) error
+	FileList(build *models.Build) ([]*models.File, error)
+	FileFind(proc *models.Proc, name string) (*models.File, error)
+	FileRead(proc *models.Proc, name string) (io.ReadCloser, error)
 }

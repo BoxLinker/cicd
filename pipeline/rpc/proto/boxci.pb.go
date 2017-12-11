@@ -8,8 +8,23 @@ It is generated from these files:
 	boxci.proto
 
 It has these top-level messages:
-	HelloRequest
-	HelloReply
+	File
+	State
+	Line
+	Filter
+	Pipeline
+	HealthCheckRequest
+	HealthCheckResponse
+	NextRequest
+	NextReply
+	InitRequest
+	WaitRequest
+	DoneRequest
+	ExtendRequest
+	UploadRequest
+	UpdateRequest
+	LogRequest
+	Empty
 */
 package proto
 
@@ -33,43 +48,491 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-// HelloRequest 请求结构
-type HelloRequest struct {
-	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+type HealthCheckResponse_ServingStatus int32
+
+const (
+	HealthCheckResponse_UNKNOWN     HealthCheckResponse_ServingStatus = 0
+	HealthCheckResponse_SERVING     HealthCheckResponse_ServingStatus = 1
+	HealthCheckResponse_NOT_SERVING HealthCheckResponse_ServingStatus = 2
+)
+
+var HealthCheckResponse_ServingStatus_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "SERVING",
+	2: "NOT_SERVING",
+}
+var HealthCheckResponse_ServingStatus_value = map[string]int32{
+	"UNKNOWN":     0,
+	"SERVING":     1,
+	"NOT_SERVING": 2,
 }
 
-func (m *HelloRequest) Reset()                    { *m = HelloRequest{} }
-func (m *HelloRequest) String() string            { return proto1.CompactTextString(m) }
-func (*HelloRequest) ProtoMessage()               {}
-func (*HelloRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (x HealthCheckResponse_ServingStatus) String() string {
+	return proto1.EnumName(HealthCheckResponse_ServingStatus_name, int32(x))
+}
+func (HealthCheckResponse_ServingStatus) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{6, 0}
+}
 
-func (m *HelloRequest) GetName() string {
+type File struct {
+	Name string            `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Proc string            `protobuf:"bytes,2,opt,name=proc" json:"proc,omitempty"`
+	Mime string            `protobuf:"bytes,3,opt,name=mime" json:"mime,omitempty"`
+	Time int64             `protobuf:"varint,4,opt,name=time" json:"time,omitempty"`
+	Size int32             `protobuf:"varint,5,opt,name=size" json:"size,omitempty"`
+	Data []byte            `protobuf:"bytes,6,opt,name=data,proto3" json:"data,omitempty"`
+	Meta map[string]string `protobuf:"bytes,7,rep,name=meta" json:"meta,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+}
+
+func (m *File) Reset()                    { *m = File{} }
+func (m *File) String() string            { return proto1.CompactTextString(m) }
+func (*File) ProtoMessage()               {}
+func (*File) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *File) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-// HelloReply 响应结构
-type HelloReply struct {
-	Message string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
-}
-
-func (m *HelloReply) Reset()                    { *m = HelloReply{} }
-func (m *HelloReply) String() string            { return proto1.CompactTextString(m) }
-func (*HelloReply) ProtoMessage()               {}
-func (*HelloReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *HelloReply) GetMessage() string {
+func (m *File) GetProc() string {
 	if m != nil {
-		return m.Message
+		return m.Proc
 	}
 	return ""
 }
 
+func (m *File) GetMime() string {
+	if m != nil {
+		return m.Mime
+	}
+	return ""
+}
+
+func (m *File) GetTime() int64 {
+	if m != nil {
+		return m.Time
+	}
+	return 0
+}
+
+func (m *File) GetSize() int32 {
+	if m != nil {
+		return m.Size
+	}
+	return 0
+}
+
+func (m *File) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *File) GetMeta() map[string]string {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+type State struct {
+	Name     string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Exited   bool   `protobuf:"varint,2,opt,name=exited" json:"exited,omitempty"`
+	ExitCode int32  `protobuf:"varint,3,opt,name=exit_code,json=exitCode" json:"exit_code,omitempty"`
+	Started  int64  `protobuf:"varint,4,opt,name=started" json:"started,omitempty"`
+	Finished int64  `protobuf:"varint,5,opt,name=finished" json:"finished,omitempty"`
+	Error    string `protobuf:"bytes,6,opt,name=error" json:"error,omitempty"`
+}
+
+func (m *State) Reset()                    { *m = State{} }
+func (m *State) String() string            { return proto1.CompactTextString(m) }
+func (*State) ProtoMessage()               {}
+func (*State) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *State) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *State) GetExited() bool {
+	if m != nil {
+		return m.Exited
+	}
+	return false
+}
+
+func (m *State) GetExitCode() int32 {
+	if m != nil {
+		return m.ExitCode
+	}
+	return 0
+}
+
+func (m *State) GetStarted() int64 {
+	if m != nil {
+		return m.Started
+	}
+	return 0
+}
+
+func (m *State) GetFinished() int64 {
+	if m != nil {
+		return m.Finished
+	}
+	return 0
+}
+
+func (m *State) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type Line struct {
+	Proc string `protobuf:"bytes,1,opt,name=proc" json:"proc,omitempty"`
+	Time int64  `protobuf:"varint,2,opt,name=time" json:"time,omitempty"`
+	Pos  int32  `protobuf:"varint,3,opt,name=pos" json:"pos,omitempty"`
+	Out  string `protobuf:"bytes,4,opt,name=out" json:"out,omitempty"`
+}
+
+func (m *Line) Reset()                    { *m = Line{} }
+func (m *Line) String() string            { return proto1.CompactTextString(m) }
+func (*Line) ProtoMessage()               {}
+func (*Line) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *Line) GetProc() string {
+	if m != nil {
+		return m.Proc
+	}
+	return ""
+}
+
+func (m *Line) GetTime() int64 {
+	if m != nil {
+		return m.Time
+	}
+	return 0
+}
+
+func (m *Line) GetPos() int32 {
+	if m != nil {
+		return m.Pos
+	}
+	return 0
+}
+
+func (m *Line) GetOut() string {
+	if m != nil {
+		return m.Out
+	}
+	return ""
+}
+
+type Filter struct {
+	Labels map[string]string `protobuf:"bytes,1,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Expr   string            `protobuf:"bytes,2,opt,name=expr" json:"expr,omitempty"`
+}
+
+func (m *Filter) Reset()                    { *m = Filter{} }
+func (m *Filter) String() string            { return proto1.CompactTextString(m) }
+func (*Filter) ProtoMessage()               {}
+func (*Filter) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *Filter) GetLabels() map[string]string {
+	if m != nil {
+		return m.Labels
+	}
+	return nil
+}
+
+func (m *Filter) GetExpr() string {
+	if m != nil {
+		return m.Expr
+	}
+	return ""
+}
+
+type Pipeline struct {
+	Id      string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Timeout int64  `protobuf:"varint,2,opt,name=timeout" json:"timeout,omitempty"`
+	Payload []byte `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
+}
+
+func (m *Pipeline) Reset()                    { *m = Pipeline{} }
+func (m *Pipeline) String() string            { return proto1.CompactTextString(m) }
+func (*Pipeline) ProtoMessage()               {}
+func (*Pipeline) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *Pipeline) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *Pipeline) GetTimeout() int64 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
+func (m *Pipeline) GetPayload() []byte {
+	if m != nil {
+		return m.Payload
+	}
+	return nil
+}
+
+type HealthCheckRequest struct {
+	Service string `protobuf:"bytes,1,opt,name=service" json:"service,omitempty"`
+}
+
+func (m *HealthCheckRequest) Reset()                    { *m = HealthCheckRequest{} }
+func (m *HealthCheckRequest) String() string            { return proto1.CompactTextString(m) }
+func (*HealthCheckRequest) ProtoMessage()               {}
+func (*HealthCheckRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *HealthCheckRequest) GetService() string {
+	if m != nil {
+		return m.Service
+	}
+	return ""
+}
+
+type HealthCheckResponse struct {
+	Status HealthCheckResponse_ServingStatus `protobuf:"varint,1,opt,name=status,enum=proto.HealthCheckResponse_ServingStatus" json:"status,omitempty"`
+}
+
+func (m *HealthCheckResponse) Reset()                    { *m = HealthCheckResponse{} }
+func (m *HealthCheckResponse) String() string            { return proto1.CompactTextString(m) }
+func (*HealthCheckResponse) ProtoMessage()               {}
+func (*HealthCheckResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *HealthCheckResponse) GetStatus() HealthCheckResponse_ServingStatus {
+	if m != nil {
+		return m.Status
+	}
+	return HealthCheckResponse_UNKNOWN
+}
+
+type NextRequest struct {
+	Filter *Filter `protobuf:"bytes,1,opt,name=filter" json:"filter,omitempty"`
+}
+
+func (m *NextRequest) Reset()                    { *m = NextRequest{} }
+func (m *NextRequest) String() string            { return proto1.CompactTextString(m) }
+func (*NextRequest) ProtoMessage()               {}
+func (*NextRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *NextRequest) GetFilter() *Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
+type NextReply struct {
+	Pipeline *Pipeline `protobuf:"bytes,1,opt,name=pipeline" json:"pipeline,omitempty"`
+}
+
+func (m *NextReply) Reset()                    { *m = NextReply{} }
+func (m *NextReply) String() string            { return proto1.CompactTextString(m) }
+func (*NextReply) ProtoMessage()               {}
+func (*NextReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *NextReply) GetPipeline() *Pipeline {
+	if m != nil {
+		return m.Pipeline
+	}
+	return nil
+}
+
+type InitRequest struct {
+	Id    string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	State *State `protobuf:"bytes,2,opt,name=state" json:"state,omitempty"`
+}
+
+func (m *InitRequest) Reset()                    { *m = InitRequest{} }
+func (m *InitRequest) String() string            { return proto1.CompactTextString(m) }
+func (*InitRequest) ProtoMessage()               {}
+func (*InitRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *InitRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *InitRequest) GetState() *State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+type WaitRequest struct {
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+}
+
+func (m *WaitRequest) Reset()                    { *m = WaitRequest{} }
+func (m *WaitRequest) String() string            { return proto1.CompactTextString(m) }
+func (*WaitRequest) ProtoMessage()               {}
+func (*WaitRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *WaitRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+type DoneRequest struct {
+	Id    string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	State *State `protobuf:"bytes,2,opt,name=state" json:"state,omitempty"`
+}
+
+func (m *DoneRequest) Reset()                    { *m = DoneRequest{} }
+func (m *DoneRequest) String() string            { return proto1.CompactTextString(m) }
+func (*DoneRequest) ProtoMessage()               {}
+func (*DoneRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *DoneRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *DoneRequest) GetState() *State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+type ExtendRequest struct {
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+}
+
+func (m *ExtendRequest) Reset()                    { *m = ExtendRequest{} }
+func (m *ExtendRequest) String() string            { return proto1.CompactTextString(m) }
+func (*ExtendRequest) ProtoMessage()               {}
+func (*ExtendRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *ExtendRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+type UploadRequest struct {
+	Id   string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	File *File  `protobuf:"bytes,2,opt,name=file" json:"file,omitempty"`
+}
+
+func (m *UploadRequest) Reset()                    { *m = UploadRequest{} }
+func (m *UploadRequest) String() string            { return proto1.CompactTextString(m) }
+func (*UploadRequest) ProtoMessage()               {}
+func (*UploadRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+
+func (m *UploadRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *UploadRequest) GetFile() *File {
+	if m != nil {
+		return m.File
+	}
+	return nil
+}
+
+type UpdateRequest struct {
+	Id    string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	State *State `protobuf:"bytes,2,opt,name=state" json:"state,omitempty"`
+}
+
+func (m *UpdateRequest) Reset()                    { *m = UpdateRequest{} }
+func (m *UpdateRequest) String() string            { return proto1.CompactTextString(m) }
+func (*UpdateRequest) ProtoMessage()               {}
+func (*UpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+
+func (m *UpdateRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *UpdateRequest) GetState() *State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+type LogRequest struct {
+	Id   string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Line *Line  `protobuf:"bytes,2,opt,name=line" json:"line,omitempty"`
+}
+
+func (m *LogRequest) Reset()                    { *m = LogRequest{} }
+func (m *LogRequest) String() string            { return proto1.CompactTextString(m) }
+func (*LogRequest) ProtoMessage()               {}
+func (*LogRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+
+func (m *LogRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *LogRequest) GetLine() *Line {
+	if m != nil {
+		return m.Line
+	}
+	return nil
+}
+
+type Empty struct {
+}
+
+func (m *Empty) Reset()                    { *m = Empty{} }
+func (m *Empty) String() string            { return proto1.CompactTextString(m) }
+func (*Empty) ProtoMessage()               {}
+func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+
 func init() {
-	proto1.RegisterType((*HelloRequest)(nil), "proto.HelloRequest")
-	proto1.RegisterType((*HelloReply)(nil), "proto.HelloReply")
+	proto1.RegisterType((*File)(nil), "proto.File")
+	proto1.RegisterType((*State)(nil), "proto.State")
+	proto1.RegisterType((*Line)(nil), "proto.Line")
+	proto1.RegisterType((*Filter)(nil), "proto.Filter")
+	proto1.RegisterType((*Pipeline)(nil), "proto.Pipeline")
+	proto1.RegisterType((*HealthCheckRequest)(nil), "proto.HealthCheckRequest")
+	proto1.RegisterType((*HealthCheckResponse)(nil), "proto.HealthCheckResponse")
+	proto1.RegisterType((*NextRequest)(nil), "proto.NextRequest")
+	proto1.RegisterType((*NextReply)(nil), "proto.NextReply")
+	proto1.RegisterType((*InitRequest)(nil), "proto.InitRequest")
+	proto1.RegisterType((*WaitRequest)(nil), "proto.WaitRequest")
+	proto1.RegisterType((*DoneRequest)(nil), "proto.DoneRequest")
+	proto1.RegisterType((*ExtendRequest)(nil), "proto.ExtendRequest")
+	proto1.RegisterType((*UploadRequest)(nil), "proto.UploadRequest")
+	proto1.RegisterType((*UpdateRequest)(nil), "proto.UpdateRequest")
+	proto1.RegisterType((*LogRequest)(nil), "proto.LogRequest")
+	proto1.RegisterType((*Empty)(nil), "proto.Empty")
+	proto1.RegisterEnum("proto.HealthCheckResponse_ServingStatus", HealthCheckResponse_ServingStatus_name, HealthCheckResponse_ServingStatus_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -80,66 +543,295 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for Hello service
+// Client API for BoxCI service
 
-type HelloClient interface {
-	// 定义SayHello方法
-	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
+type BoxCIClient interface {
+	Next(ctx context.Context, in *NextRequest, opts ...grpc.CallOption) (*NextReply, error)
+	Init(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*Empty, error)
+	Wait(ctx context.Context, in *WaitRequest, opts ...grpc.CallOption) (*Empty, error)
+	Done(ctx context.Context, in *DoneRequest, opts ...grpc.CallOption) (*Empty, error)
+	Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*Empty, error)
+	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Empty, error)
+	Upload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*Empty, error)
+	Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
-type helloClient struct {
+type boxCIClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewHelloClient(cc *grpc.ClientConn) HelloClient {
-	return &helloClient{cc}
+func NewBoxCIClient(cc *grpc.ClientConn) BoxCIClient {
+	return &boxCIClient{cc}
 }
 
-func (c *helloClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
-	out := new(HelloReply)
-	err := grpc.Invoke(ctx, "/proto.Hello/SayHello", in, out, c.cc, opts...)
+func (c *boxCIClient) Next(ctx context.Context, in *NextRequest, opts ...grpc.CallOption) (*NextReply, error) {
+	out := new(NextReply)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Next", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for Hello service
-
-type HelloServer interface {
-	// 定义SayHello方法
-	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
+func (c *boxCIClient) Init(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Init", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func RegisterHelloServer(s *grpc.Server, srv HelloServer) {
-	s.RegisterService(&_Hello_serviceDesc, srv)
+func (c *boxCIClient) Wait(ctx context.Context, in *WaitRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Wait", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func _Hello_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HelloRequest)
+func (c *boxCIClient) Done(ctx context.Context, in *DoneRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Done", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boxCIClient) Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Extend", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boxCIClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Update", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boxCIClient) Upload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Upload", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boxCIClient) Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/proto.BoxCI/Log", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for BoxCI service
+
+type BoxCIServer interface {
+	Next(context.Context, *NextRequest) (*NextReply, error)
+	Init(context.Context, *InitRequest) (*Empty, error)
+	Wait(context.Context, *WaitRequest) (*Empty, error)
+	Done(context.Context, *DoneRequest) (*Empty, error)
+	Extend(context.Context, *ExtendRequest) (*Empty, error)
+	Update(context.Context, *UpdateRequest) (*Empty, error)
+	Upload(context.Context, *UploadRequest) (*Empty, error)
+	Log(context.Context, *LogRequest) (*Empty, error)
+}
+
+func RegisterBoxCIServer(s *grpc.Server, srv BoxCIServer) {
+	s.RegisterService(&_BoxCI_serviceDesc, srv)
+}
+
+func _BoxCI_Next_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NextRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HelloServer).SayHello(ctx, in)
+		return srv.(BoxCIServer).Next(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Hello/SayHello",
+		FullMethod: "/proto.BoxCI/Next",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HelloServer).SayHello(ctx, req.(*HelloRequest))
+		return srv.(BoxCIServer).Next(ctx, req.(*NextRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Hello_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.Hello",
-	HandlerType: (*HelloServer)(nil),
+func _BoxCI_Init_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Init(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Init",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Init(ctx, req.(*InitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoxCI_Wait_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WaitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Wait(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Wait",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Wait(ctx, req.(*WaitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoxCI_Done_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Done(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Done",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Done(ctx, req.(*DoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoxCI_Extend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExtendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Extend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Extend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Extend(ctx, req.(*ExtendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoxCI_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Update(ctx, req.(*UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoxCI_Upload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Upload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Upload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Upload(ctx, req.(*UploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoxCI_Log_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoxCIServer).Log(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.BoxCI/Log",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoxCIServer).Log(ctx, req.(*LogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _BoxCI_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.BoxCI",
+	HandlerType: (*BoxCIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SayHello",
-			Handler:    _Hello_SayHello_Handler,
+			MethodName: "Next",
+			Handler:    _BoxCI_Next_Handler,
+		},
+		{
+			MethodName: "Init",
+			Handler:    _BoxCI_Init_Handler,
+		},
+		{
+			MethodName: "Wait",
+			Handler:    _BoxCI_Wait_Handler,
+		},
+		{
+			MethodName: "Done",
+			Handler:    _BoxCI_Done_Handler,
+		},
+		{
+			MethodName: "Extend",
+			Handler:    _BoxCI_Extend_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _BoxCI_Update_Handler,
+		},
+		{
+			MethodName: "Upload",
+			Handler:    _BoxCI_Upload_Handler,
+		},
+		{
+			MethodName: "Log",
+			Handler:    _BoxCI_Log_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -149,14 +841,53 @@ var _Hello_serviceDesc = grpc.ServiceDesc{
 func init() { proto1.RegisterFile("boxci.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 131 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0xca, 0xaf, 0x48,
-	0xce, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x4a, 0x4a, 0x5c, 0x3c, 0x1e,
-	0xa9, 0x39, 0x39, 0xf9, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x42, 0x5c, 0x2c, 0x79,
-	0x89, 0xb9, 0xa9, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x60, 0xb6, 0x92, 0x1a, 0x17, 0x17,
-	0x54, 0x4d, 0x41, 0x4e, 0xa5, 0x90, 0x04, 0x17, 0x7b, 0x6e, 0x6a, 0x71, 0x71, 0x62, 0x3a, 0x4c,
-	0x11, 0x8c, 0x6b, 0x64, 0xcb, 0xc5, 0x0a, 0x56, 0x27, 0x64, 0xc2, 0xc5, 0x11, 0x9c, 0x58, 0x09,
-	0x61, 0x0b, 0x43, 0xec, 0xd3, 0x43, 0xb6, 0x45, 0x4a, 0x10, 0x55, 0xb0, 0x20, 0xa7, 0x52, 0x89,
-	0x21, 0x89, 0x0d, 0x2c, 0x66, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xb2, 0x26, 0x2a, 0x67, 0xa7,
-	0x00, 0x00, 0x00,
+	// 764 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x5d, 0x4f, 0xdb, 0x48,
+	0x14, 0xc5, 0x89, 0xed, 0x24, 0xd7, 0x04, 0xb2, 0xb3, 0xec, 0xca, 0x9b, 0xd5, 0x8a, 0xc8, 0xd2,
+	0x4a, 0xd9, 0xad, 0x64, 0xa9, 0x69, 0xa5, 0x52, 0xa4, 0x4a, 0xb4, 0x69, 0x68, 0x51, 0xd3, 0x50,
+	0x4d, 0x4a, 0x79, 0x44, 0x26, 0x1e, 0xc0, 0xc2, 0xf1, 0xb8, 0xf6, 0x04, 0x25, 0xfd, 0x09, 0x7d,
+	0xed, 0x6b, 0x7f, 0x5d, 0xff, 0x43, 0xdf, 0xab, 0x3b, 0x63, 0x1b, 0x07, 0x42, 0xa5, 0x8a, 0x27,
+	0xee, 0xc7, 0xb9, 0x73, 0xcf, 0x3d, 0x27, 0x06, 0xac, 0x53, 0x3e, 0x9f, 0x04, 0x6e, 0x9c, 0x70,
+	0xc1, 0x89, 0x21, 0xff, 0x38, 0xdf, 0x34, 0xd0, 0xf7, 0x83, 0x90, 0x11, 0x02, 0x7a, 0xe4, 0x4d,
+	0x99, 0xad, 0x75, 0xb4, 0x6e, 0x83, 0xca, 0x18, 0x6b, 0x71, 0xc2, 0x27, 0x76, 0x45, 0xd5, 0x30,
+	0xc6, 0xda, 0x34, 0x98, 0x32, 0xbb, 0xaa, 0x6a, 0x18, 0x63, 0x4d, 0x60, 0x4d, 0xef, 0x68, 0xdd,
+	0x2a, 0x95, 0x31, 0xd6, 0xd2, 0xe0, 0x13, 0xb3, 0x8d, 0x8e, 0xd6, 0x35, 0xa8, 0x8c, 0xb1, 0xe6,
+	0x7b, 0xc2, 0xb3, 0xcd, 0x8e, 0xd6, 0x5d, 0xa7, 0x32, 0x26, 0xff, 0x81, 0x3e, 0x65, 0xc2, 0xb3,
+	0x6b, 0x9d, 0x6a, 0xd7, 0xea, 0xfd, 0xa1, 0xd8, 0xb9, 0x48, 0xc9, 0x7d, 0xcb, 0x84, 0x37, 0x88,
+	0x44, 0xb2, 0xa0, 0x12, 0xd2, 0x7e, 0x02, 0x8d, 0xa2, 0x44, 0x5a, 0x50, 0xbd, 0x64, 0x8b, 0x8c,
+	0x2e, 0x86, 0x64, 0x0b, 0x8c, 0x2b, 0x2f, 0x9c, 0xb1, 0x8c, 0xae, 0x4a, 0x76, 0x2b, 0x3b, 0x9a,
+	0xf3, 0x55, 0x03, 0x63, 0x2c, 0x3c, 0xb1, 0xfa, 0xca, 0x3f, 0xc1, 0x64, 0xf3, 0x40, 0x30, 0x5f,
+	0x0e, 0xd6, 0x69, 0x96, 0x91, 0xbf, 0xa1, 0x81, 0xd1, 0xc9, 0x84, 0xfb, 0xea, 0x5c, 0x83, 0xd6,
+	0xb1, 0xd0, 0xe7, 0x3e, 0x23, 0x36, 0xd4, 0x52, 0xe1, 0x25, 0x38, 0xa5, 0xae, 0xce, 0x53, 0xd2,
+	0x86, 0xfa, 0x59, 0x10, 0x05, 0xe9, 0x05, 0xf3, 0xe5, 0xf1, 0x55, 0x5a, 0xe4, 0x48, 0x91, 0x25,
+	0x09, 0x4f, 0xa4, 0x02, 0x0d, 0xaa, 0x12, 0x87, 0x82, 0x3e, 0x0c, 0xa2, 0x6b, 0xb9, 0xb5, 0x65,
+	0xb9, 0xa5, 0xb4, 0x95, 0x92, 0xb4, 0x2d, 0xa8, 0xc6, 0x3c, 0xcd, 0x28, 0x61, 0x88, 0x15, 0x3e,
+	0x13, 0x92, 0x49, 0x83, 0x62, 0xe8, 0x7c, 0xd6, 0xc0, 0xdc, 0x0f, 0x42, 0xc1, 0x12, 0xf2, 0x10,
+	0xcc, 0xd0, 0x3b, 0x65, 0x61, 0x6a, 0x6b, 0x52, 0xe3, 0xbf, 0xae, 0x35, 0x16, 0x2c, 0x71, 0x87,
+	0xb2, 0xa7, 0x74, 0xce, 0x80, 0xb8, 0x95, 0xcd, 0xe3, 0x24, 0x37, 0x1e, 0xe3, 0xf6, 0x53, 0xb0,
+	0x4a, 0xd0, 0x5f, 0xd2, 0x7f, 0x04, 0xf5, 0x77, 0x41, 0xcc, 0x42, 0x3c, 0x72, 0x03, 0x2a, 0x81,
+	0x9f, 0x8d, 0x55, 0x02, 0x1f, 0x85, 0xc4, 0xa3, 0x90, 0xbe, 0xba, 0x31, 0x4f, 0xb1, 0x13, 0x7b,
+	0x8b, 0x90, 0x7b, 0xbe, 0x3c, 0x75, 0x9d, 0xe6, 0xa9, 0xe3, 0x02, 0x79, 0xcd, 0xbc, 0x50, 0x5c,
+	0xf4, 0x2f, 0xd8, 0xe4, 0x92, 0xb2, 0x8f, 0x33, 0x96, 0x4a, 0x7c, 0xca, 0x92, 0xab, 0x60, 0x92,
+	0xdb, 0x9b, 0xa7, 0xce, 0x17, 0x0d, 0x7e, 0x5f, 0x1a, 0x48, 0x63, 0x1e, 0xa5, 0x8c, 0xec, 0x81,
+	0x99, 0x0a, 0x4f, 0xcc, 0x52, 0x39, 0xb0, 0xd1, 0xeb, 0x66, 0xca, 0xac, 0xc0, 0xba, 0x63, 0x7c,
+	0x2b, 0x3a, 0x1f, 0x4b, 0x3c, 0xcd, 0xe6, 0x9c, 0x5d, 0x68, 0x2e, 0x35, 0x88, 0x05, 0xb5, 0xa3,
+	0xd1, 0x9b, 0xd1, 0xe1, 0xf1, 0xa8, 0xb5, 0x86, 0xc9, 0x78, 0x40, 0x3f, 0x1c, 0x8c, 0x5e, 0xb5,
+	0x34, 0xb2, 0x09, 0xd6, 0xe8, 0xf0, 0xfd, 0x49, 0x5e, 0xa8, 0x38, 0x8f, 0xc1, 0x1a, 0xb1, 0xb9,
+	0xc8, 0xe9, 0xff, 0x0b, 0xe6, 0x99, 0x74, 0x44, 0x92, 0xb1, 0x7a, 0xcd, 0x25, 0x9b, 0x68, 0xd6,
+	0x74, 0x76, 0xa0, 0xa1, 0xa6, 0xe2, 0x70, 0x41, 0x1e, 0x40, 0x3d, 0xce, 0x84, 0xcd, 0xa6, 0x36,
+	0xb3, 0xa9, 0x5c, 0x6f, 0x5a, 0x00, 0x9c, 0xe7, 0x60, 0x1d, 0x44, 0x41, 0xb1, 0xef, 0xa6, 0x11,
+	0x0e, 0x18, 0x78, 0x94, 0xb2, 0xcf, 0xea, 0xad, 0x67, 0x0f, 0xc9, 0xef, 0x86, 0xaa, 0x96, 0xf3,
+	0x0f, 0x58, 0xc7, 0xde, 0x9d, 0x4f, 0xe0, 0x86, 0x97, 0x3c, 0x62, 0xf7, 0xd9, 0xb0, 0x0d, 0xcd,
+	0xc1, 0x5c, 0xb0, 0xc8, 0xbf, 0x6b, 0xc7, 0x1e, 0x34, 0x8f, 0x62, 0xfc, 0x15, 0xdc, 0xb5, 0x65,
+	0x1b, 0xf4, 0xb3, 0x20, 0xcc, 0x97, 0x58, 0xa5, 0x7f, 0x28, 0x54, 0x36, 0x9c, 0x3e, 0xbe, 0xe0,
+	0xe3, 0xce, 0x7b, 0xf0, 0x7c, 0x06, 0x30, 0xe4, 0xe7, 0x3f, 0xe1, 0x20, 0x3d, 0x59, 0xe6, 0x80,
+	0x1f, 0x39, 0x95, 0x0d, 0xa7, 0x06, 0xc6, 0x60, 0x1a, 0x8b, 0x45, 0xef, 0x7b, 0x05, 0x8c, 0x17,
+	0x7c, 0xde, 0x3f, 0x20, 0x2e, 0xe8, 0x68, 0x2c, 0x21, 0x19, 0xba, 0xf4, 0xdb, 0x68, 0xb7, 0x96,
+	0x6a, 0x71, 0xb8, 0x70, 0xd6, 0xc8, 0xff, 0xa0, 0xa3, 0x9d, 0x05, 0xbe, 0xe4, 0x6d, 0x3b, 0xa7,
+	0x2c, 0x77, 0x28, 0x2c, 0xfa, 0x56, 0x60, 0x4b, 0x26, 0xae, 0xc2, 0xa2, 0x89, 0x05, 0xb6, 0xe4,
+	0xe8, 0x2d, 0xac, 0x0b, 0xa6, 0x72, 0x8b, 0x6c, 0xe5, 0x9d, 0xb2, 0x79, 0xab, 0xf0, 0x4a, 0xfa,
+	0x02, 0xbf, 0xe4, 0xc4, 0x6a, 0x3c, 0x9a, 0x5d, 0xc2, 0x97, 0xbc, 0xbf, 0x85, 0xef, 0x42, 0x75,
+	0xc8, 0xcf, 0xc9, 0x6f, 0xb9, 0xe0, 0x85, 0x43, 0x37, 0x91, 0xa7, 0xa6, 0x4c, 0x1f, 0xfd, 0x08,
+	0x00, 0x00, 0xff, 0xff, 0x5e, 0xf9, 0x8a, 0xf1, 0x14, 0x07, 0x00, 0x00,
 }

@@ -18,3 +18,10 @@ type SCM interface{
 
 	Hook(r *http.Request) (*models.Repo, *models.Build, error)
 }
+
+// Refresher refreshes an oauth token and expiration for the given user. It
+// returns true if the token was refreshed, false if the token was not refreshed,
+// and error if it failed to refersh.
+type Refresher interface {
+	Refresh(*models.User) (bool, error)
+}

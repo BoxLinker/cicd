@@ -89,7 +89,15 @@ func (m *DefaultManager) GetSCM(scm string) scm.SCM {
 	return m.scmMap[scm]
 }
 
+func (m *DefaultManager) Store() store.Store {
+	return m.dataStore
+}
+
 func (m *DefaultManager) ConfigStore() models.ConfigStore {
+	return m.dataStore
+}
+
+func (m *DefaultManager) FileStore() models.FileStore {
 	return m.dataStore
 }
 
@@ -104,9 +112,6 @@ func (m *DefaultManager) Queue() queue.Queue {
 	return m.queue
 }
 
-func (m *DefaultManager) Store() store.Store {
-	return m.dataStore
-}
 
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {

@@ -17,6 +17,7 @@ import (
 	"github.com/BoxLinker/cicd/pipeline/rpc/proto"
 	"github.com/BoxLinker/cicd/logging"
 	"github.com/BoxLinker/cicd/pubsub"
+	"github.com/BoxLinker/cicd/models"
 )
 
 var flags = []cli.Flag{
@@ -195,15 +196,14 @@ func server(c *cli.Context) error {
 			grpc.UnaryInterceptor(auther.unaryInterceptor),
 		)
 
-		ss := new(cicdServer.RPCServer)
+		ss := new(cicdServer.BoxCIServer)
 		ss.Queue = queues
 		ss.Logger = logs
 		ss.Pubsub = pubsubs
 		ss.Store = dataStore
+		ss.SCM = scmMap[models.GITHUB] // todo scm 类型应该是根据请求参数来设置
 
-
-
-		proto.RegisterHelloServer(s, ss)
+		proto.RegisterBoxCIServer(s, ss)
 
 		err = s.Serve(lis)
 		if err != nil {
