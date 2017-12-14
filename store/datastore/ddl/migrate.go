@@ -1,7 +1,7 @@
 package ddl
 
 import (
-	"github.com/BoxLinker/cicd/store/datastore/ddlastore/ddl/mysql"
+	"github.com/BoxLinker/cicd/store/datastore/ddl/mysql"
 	"database/sql"
 	"errors"
 )

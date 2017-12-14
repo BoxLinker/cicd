@@ -1,6 +1,6 @@
 package sql
 
-import "github.com/BoxLinker/cicd/store/datastore/sqlastore/sql/mysql"
+import "github.com/BoxLinker/cicd/store/datastore/sql/mysql"
 
 // Supported database drivers
 const (

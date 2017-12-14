@@ -368,6 +368,12 @@
 			"revisionTime": "2017-07-19T03:38:15Z"
 		},
 		{
+			"checksumSHA1": "G1tnrjQ9YZH7qfHAQI9vZmpNuYg=",
+			"path": "github.com/tevino/abool",
+			"revision": "9b9efcf221b50905aab9bbabd3daed56dc10f339",
+			"revisionTime": "2017-09-17T06:19:28Z"
+		},
+		{
 			"checksumSHA1": "MWqyOvDMkW+XYe2RJ5mplvut+aE=",
 			"origin": "k8s.io/api/vendor/github.com/ugorji/go/codec",
 			"path": "github.com/ugorji/go/codec",
@@ -394,11 +400,10 @@
 			"revisionTime": "2017-05-09T19:22:37Z"
 		},
 		{
-			"checksumSHA1": "1FiFah1jlD3OQhkiaOK92Tqv/68=",
-			"origin": "k8s.io/apimachinery/vendor/golang.org/x/net/http2",
+			"checksumSHA1": "Iv1YK4j9U0IgQl3/nu3FRjupk4I=",
 			"path": "golang.org/x/net/http2",
-			"revision": "6134cb2da6d90597b0434e349f90f94fafc9ae51",
-			"revisionTime": "2017-07-19T03:38:15Z"
+			"revision": "d866cfc389cec985d6fda2859936a575a55a3ab6",
+			"revisionTime": "2017-12-11T20:45:21Z"
 		},
 		{
 			"checksumSHA1": "HzuGD7AwgC0p1az1WAQnEFnEk98=",

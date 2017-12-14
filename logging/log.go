@@ -4,7 +4,6 @@ import (
 	"sync"
 	"context"
 	"io"
-	"unicode"
 )
 
 type subscriber struct {
