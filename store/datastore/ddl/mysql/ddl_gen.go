@@ -20,6 +20,34 @@ var migrations = []struct {
 		name: "create-table-tasks",
 		stmt: createTableTasks,
 	},
+	{
+		name: "create-table-config",
+		stmt: createTableConfig,
+	},
+	{
+		name: "create-table-procs",
+		stmt: createTableProcs,
+	},
+	{
+		name: "create-index-procs-build",
+		stmt: createIndexProcsBuild,
+	},
+	{
+		name: "create-table-logs",
+		stmt: createTableLogs,
+	},
+	{
+		name: "create-table-files",
+		stmt: createTableFiles,
+	},
+	{
+		name: "create-index-files-builds",
+		stmt: createIndexFilesBuilds,
+	},
+	{
+		name: "create-index-files-procs",
+		stmt: createIndexFilesProcs,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -120,20 +148,28 @@ CREATE TABLE IF NOT EXISTS users (
 
 var createTableRepos = `
 CREATE TABLE IF NOT EXISTS repos (
- repo_id              INTEGER PRIMARY KEY AUTO_INCREMENT
-,repo_user_id         VARCHAR(250) NOT NULL
-,repo_owner           VARCHAR(250) NOT NULL
-,repo_name            VARCHAR(250) NOT NULL
-,repo_full_name       VARCHAR(250) NOT NULL
-,repo_scm             VARCHAR(250)
-,repo_link_url        VARCHAR(250)
-,repo_clone_Url       VARCHAR(250)
-,repo_default_branch  VARCHAR(250)
-,repo_is_private      BOOLEAN
-,created_unix         INTEGER
-,updated_unix         INTEGER
+ repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
+,repo_user_id       INTEGER
+,repo_owner         VARCHAR(250)
+,repo_name          VARCHAR(250)
+,repo_full_name     VARCHAR(250)
+,repo_avatar        VARCHAR(500)
+,repo_link          VARCHAR(1000)
+,repo_clone         VARCHAR(1000)
+,repo_branch        VARCHAR(500)
+,repo_timeout       INTEGER
+,repo_private       BOOLEAN
+,repo_trusted       BOOLEAN
+,repo_allow_pr      BOOLEAN
+,repo_allow_push    BOOLEAN
+,repo_allow_deploys BOOLEAN
+,repo_allow_tags    BOOLEAN
+,repo_hash          VARCHAR(500)
+,repo_scm           VARCHAR(50)
+,repo_config_path   VARCHAR(500)
+,repo_gated         BOOLEAN
 
-,UNIQUE (repo_full_name,repo_scm)
+,UNIQUE(repo_full_name)
 );
 `
 
@@ -147,4 +183,89 @@ CREATE TABLE IF NOT EXISTS tasks (
 ,task_data    MEDIUMBLOB
 ,task_labels  MEDIUMBLOB
 );
+`
+
+//
+// 004_create_table_config.sql
+//
+
+var createTableConfig = `
+CREATE TABLE IF NOT EXISTS config (
+ config_id      INTEGER PRIMARY KEY AUTO_INCREMENT
+,config_repo_id INTEGER
+,config_hash    VARCHAR(250)
+,config_data    MEDIUMBLOB
+
+,UNIQUE(config_hash, config_repo_id)
+);
+`
+
+//
+// 005_create_table_procs.sql
+//
+
+var createTableProcs = `
+CREATE TABLE IF NOT EXISTS procs (
+ proc_id         INTEGER PRIMARY KEY AUTO_INCREMENT
+,proc_build_id   INTEGER
+,proc_pid        INTEGER
+,proc_ppid       INTEGER
+,proc_pgid       INTEGER
+,proc_name       VARCHAR(250)
+,proc_state      VARCHAR(250)
+,proc_error      VARCHAR(500)
+,proc_exit_code  INTEGER
+,proc_started    INTEGER
+,proc_stopped    INTEGER
+,proc_machine    VARCHAR(250)
+,proc_platform   VARCHAR(250)
+,proc_environ    VARCHAR(2000)
+
+,UNIQUE(proc_build_id, proc_pid)
+);
+`
+
+var createIndexProcsBuild = `
+CREATE INDEX proc_build_ix ON procs (proc_build_id);
+`
+
+//
+// 006_create_table_logs.sql
+//
+
+var createTableLogs = `
+CREATE TABLE IF NOT EXISTS logs (
+ log_id     INTEGER PRIMARY KEY AUTO_INCREMENT
+,log_job_id INTEGER
+,log_data   MEDIUMBLOB
+
+,UNIQUE(log_job_id)
+);
+`
+
+//
+// 007_create_table_files.sql
+//
+
+var createTableFiles = `
+CREATE TABLE IF NOT EXISTS files (
+ file_id       INTEGER PRIMARY KEY AUTO_INCREMENT
+,file_build_id INTEGER
+,file_proc_id  INTEGER
+,file_name     VARCHAR(250)
+,file_mime     VARCHAR(250)
+,file_size     INTEGER
+,file_time     INTEGER
+,file_data     MEDIUMBLOB
+
+,UNIQUE(file_proc_id,file_name)
+);
+`
+
+var createIndexFilesBuilds = `
+CREATE INDEX file_build_ix ON files (file_build_id);
+`
+
+var createIndexFilesProcs = `
+CREATE INDEX file_proc_ix  ON files (file_proc_id);
 `

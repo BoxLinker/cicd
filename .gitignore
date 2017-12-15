@@ -4,5 +4,5 @@ node_modules
 npm-debug.log
 *.pyc
 db_data
-cmd/cmd
-cmd/cicd
+cmd/agent/agent
+cmd/server/server

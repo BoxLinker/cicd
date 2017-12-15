@@ -1,18 +1,26 @@
 -- name: create-table-repos
 
 CREATE TABLE IF NOT EXISTS repos (
- repo_id              INTEGER PRIMARY KEY AUTO_INCREMENT
-,repo_user_id         VARCHAR(250) NOT NULL
-,repo_owner           VARCHAR(250) NOT NULL
-,repo_name            VARCHAR(250) NOT NULL
-,repo_full_name       VARCHAR(250) NOT NULL
-,repo_scm             VARCHAR(250)
-,repo_link_url        VARCHAR(250)
-,repo_clone_Url       VARCHAR(250)
-,repo_default_branch  VARCHAR(250)
-,repo_is_private      BOOLEAN
-,created_unix         INTEGER
-,updated_unix         INTEGER
+ repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
+,repo_user_id       INTEGER
+,repo_owner         VARCHAR(250)
+,repo_name          VARCHAR(250)
+,repo_full_name     VARCHAR(250)
+,repo_avatar        VARCHAR(500)
+,repo_link          VARCHAR(1000)
+,repo_clone         VARCHAR(1000)
+,repo_branch        VARCHAR(500)
+,repo_timeout       INTEGER
+,repo_private       BOOLEAN
+,repo_trusted       BOOLEAN
+,repo_allow_pr      BOOLEAN
+,repo_allow_push    BOOLEAN
+,repo_allow_deploys BOOLEAN
+,repo_allow_tags    BOOLEAN
+,repo_hash          VARCHAR(500)
+,repo_scm           VARCHAR(50)
+,repo_config_path   VARCHAR(500)
+,repo_gated         BOOLEAN
 
-,UNIQUE (repo_full_name,repo_scm)
+,UNIQUE(repo_full_name)
 );

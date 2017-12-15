@@ -14,7 +14,11 @@ func (db *datastore) SaveUser(user *models.User) error {
 	user.CreatedUnix = user.Created.Unix()
 	user.Updated = time.Now()
 	user.UpdatedUnix = user.Updated.Unix()
-	return meddler.Insert(db, TableSCMUsers, user)
+	if err := meddler.Insert(db, TableSCMUsers, user); err != nil {
+		logrus.Errorf("SaveUser error: %s", err)
+		return err
+	}
+	return nil
 }
 
 func (db *datastore) GetUserByUCenterID(uCenterID string, scm string) *models.User {

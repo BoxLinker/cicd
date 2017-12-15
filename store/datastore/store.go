@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	TableSCMUsers = "scm_users"
+	TableSCMUsers = "users"
 	TableRepos = "repos"
 )
 

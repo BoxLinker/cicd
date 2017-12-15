@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"github.com/urfave/cli"
@@ -29,7 +29,13 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "LISTEN",
 		Name: "listen",
-		Usage: "http listen adress",
+		Usage: "http listen address",
+	},
+	cli.StringFlag{
+		EnvVar: "TCP_LISTEN",
+		Name: "tcp-listen",
+		Usage: "tcp listen address",
+		Value: ":9000",
 	},
 	cli.BoolFlag{
 		EnvVar: "KUBERNETES_IN_CLUSTER",
@@ -94,53 +100,6 @@ func server(c *cli.Context) error {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
-	// connect to db
-	//dbType := c.String("db-type")
-	//switch dbType {
-	//case "mysql":
-	//	dbEngine, err = models.NewEngine(models.GetDBOptions(c), models.Tables())
-	//	if err != nil {
-	//		return err
-	//	}
-	//	break
-	//default:
-	//	return fmt.Errorf("unknow db type %s", dbType)
-	//}
-	//// connect to k8s api server
-	//if c.Bool("kubernetes-in-cluster") {
-	//	config, err := rest.InClusterConfig()
-	//	if err != nil {
-	//		return err
-	//	}
-	//	clientSet, err = kubernetes.NewForConfig(config)
-	//	if err != nil {
-	//		return fmt.Errorf("connect to incluster k8s error: %v", err)
-	//	}
-	//} else {
-	//	var kubeconfig *string
-	//	if home := homeDir(); home != "" {
-	//		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	//	} else {
-	//		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	//	}
-	//	flag.Parse()
-	//
-	//	// use the current context in kubeconfig
-	//	k8sConfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	//	if err != nil {
-	//		panic(err.Error())
-	//	}
-	//	logrus.Infof("kubeconfig (%+v)", k8sConfig)
-	//	// create the clientset
-	//	clientSet, err = kubernetes.NewForConfig(k8sConfig)
-	//	if err != nil {
-	//		return fmt.Errorf("connect to k8s error: %v", err)
-	//	}
-	//}
-	//controllerManager := new(manager.DefaultManager)
-	//controllerManager.ClientSet = clientSet
-	//controllerManager.DBEngine = dbEngine
-
 	scmMap, err := SetupCodeBase(c)
 	if err != nil {
 		return err
@@ -181,7 +140,7 @@ func server(c *cli.Context) error {
 	})
 
 	g.Go(func() error {
-		lis, err := net.Listen("tcp", ":9000")
+		lis, err := net.Listen("tcp", c.String("tcp-listen"))
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -205,6 +164,7 @@ func server(c *cli.Context) error {
 
 		proto.RegisterBoxCIServer(s, ss)
 
+		logrus.Infof("grpc server listen on: %s", c.String("tcp-listen"))
 		err = s.Serve(lis)
 		if err != nil {
 			logrus.Error(err)

@@ -6,6 +6,20 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
+	"config-find-id":            configFindId,
+	"config-find-repo-hash":     configFindRepoHash,
+	"config-find-approved":      configFindApproved,
+	"files-find-build":          filesFindBuild,
+	"files-find-proc-name":      filesFindProcName,
+	"files-find-proc-name-data": filesFindProcNameData,
+	"files-delete-build":        filesDeleteBuild,
+	"logs-find-proc":            logsFindProc,
+	"procs-find-id":             procsFindId,
+	"procs-find-build":          procsFindBuild,
+	"procs-find-build-pid":      procsFindBuildPid,
+	"procs-find-build-ppid":     procsFindBuildPpid,
+	"procs-delete-build":        procsDeleteBuild,
+	"repo-update-counter":       repoUpdateCounter,
 	"repo-insert-ignore":        repoInsertIgnore,
 	"repo-find-user":            repoFindUser,
 	"repo-find-fullName":        repoFindFullName,
@@ -17,20 +31,209 @@ var index = map[string]string{
 	"user-find-id-scm":          userFindIdScm,
 }
 
+var configFindId = `
+SELECT
+ config_id
+,config_repo_id
+,config_hash
+,config_data
+FROM config
+WHERE config_id = ?
+`
+
+var configFindRepoHash = `
+SELECT
+ config_id
+,config_repo_id
+,config_hash
+,config_data
+FROM config
+WHERE config_repo_id = ?
+  AND config_hash    = ?
+`
+
+var configFindApproved = `
+SELECT build_id FROM builds
+WHERE build_repo_id = ?
+AND build_config_id = ?
+AND build_status NOT IN ('blocked', 'pending')
+LIMIT 1
+`
+
+var filesFindBuild = `
+SELECT
+ file_id
+,file_build_id
+,file_proc_id
+,file_pid
+,file_name
+,file_mime
+,file_size
+,file_time
+,file_meta_passed
+,file_meta_failed
+,file_meta_skipped
+FROM files
+WHERE file_build_id = ?
+`
+
+var filesFindProcName = `
+SELECT
+ file_id
+,file_build_id
+,file_proc_id
+,file_pid
+,file_name
+,file_mime
+,file_size
+,file_time
+,file_meta_passed
+,file_meta_failed
+,file_meta_skipped
+FROM files
+WHERE file_proc_id = ?
+  AND file_name    = ?
+`
+
+var filesFindProcNameData = `
+SELECT
+ file_id
+,file_build_id
+,file_proc_id
+,file_pid
+,file_name
+,file_mime
+,file_size
+,file_time
+,file_meta_passed
+,file_meta_failed
+,file_meta_skipped
+,file_data
+FROM files
+WHERE file_proc_id = ?
+  AND file_name    = ?
+`
+
+var filesDeleteBuild = `
+DELETE FROM files WHERE file_build_id = ?
+`
+
+var logsFindProc = `
+SELECT
+ log_id
+,log_job_id
+,log_data
+FROM logs
+WHERE log_job_id = ?
+LIMIT 1
+`
+
+var procsFindId = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_pgid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_id = ?
+`
+
+var procsFindBuild = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_pgid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+ORDER BY proc_id ASC
+`
+
+var procsFindBuildPid = `
+SELECT
+proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_pgid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+  AND proc_pid = ?
+`
+
+var procsFindBuildPpid = `
+SELECT
+proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_pgid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+  AND proc_ppid = ?
+  AND proc_name = ?
+`
+
+var procsDeleteBuild = `
+DELETE FROM procs WHERE proc_build_id = ?
+`
+
+var repoUpdateCounter = `
+UPDATE repos SET repo_counter = ?
+WHERE repo_counter = ?
+  AND repo_id = ?
+`
+
 var repoInsertIgnore = `
 INSERT IGNORE INTO repos (
-  repo_user_id,
-  repo_owner,
-  repo_name,
-  repo_full_name,
-  repo_scm,
-  repo_link_url,
-  repo_clone_url,
-  repo_default_branch,
-  repo_is_private,
-  created_unix,
-  updated_unix
-) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+ repo_user_id
+,repo_owner
+,repo_name
+,repo_full_name
+,repo_scm
+,repo_link
+,repo_clone
+,repo_branch
+,repo_private
+) VALUES (?,?,?,?,?,?,?,?,?)
 `
 
 var repoFindUser = `
@@ -41,12 +244,10 @@ SELECT
 ,repo_name
 ,repo_full_name
 ,repo_scm
-,repo_link_url
-,repo_clone_url
-,repo_default_branch
-,repo_is_private
-,created_unix
-,updated_unix
+,repo_link
+,repo_clone
+,repo_branch
+,repo_private
 FROM repos
 WHERE repo_user_id = ?
 ORDER BY repo_name ASC

@@ -4,6 +4,8 @@ import (
 	"github.com/urfave/cli"
 	"github.com/BoxLinker/cicd/version"
 	_ "github.com/joho/godotenv/autoload"
+	"os"
+	"fmt"
 )
 
 func main(){
@@ -40,5 +42,9 @@ func main(){
 		},
 	}
 	app.Action = loop
+	if err := app.Run(os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
