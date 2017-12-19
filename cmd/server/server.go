@@ -83,6 +83,12 @@ var flags = []cli.Flag{
 		EnvVar: "AGENT_SECRET",
 		Name: "agent-secret",
 	},
+	cli.StringFlag{
+		EnvVar: "REPO_CONFIG",
+		Name:   "repo-config",
+		Usage:  "file path for the drone config",
+		Value:  ".boxci.yml",
+	},
 }
 
 func server(c *cli.Context) error {
@@ -134,6 +140,7 @@ func server(c *cli.Context) error {
 		cs.Config = cicdServer.Config{
 			TokenAuthURL: c.String("token-auth-url"),
 			HomeHost: c.String("home-host"),
+			RepoConfig: c.String("repo-config"),
 		}
 
 		return cs.Run()

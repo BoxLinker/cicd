@@ -8,9 +8,11 @@ import (
 	"fmt"
 )
 
+const repoTable = "repos"
+
 func (db *datastore) GetRepo(id int64) (*models.Repo, error) {
 	var repo = new(models.Repo)
-	var err = meddler.Load(db, "repos", repo, id)
+	var err = meddler.Load(db, repoTable, repo, id)
 	return repo, err
 }
 
@@ -24,6 +26,10 @@ func (db *datastore) RepoList(u *models.User) ([]*models.Repo) {
 	return data
 }
 
+func (db *datastore) UpdateRepo(repo *models.Repo) error {
+	return meddler.Update(db, repoTable, repo)
+}
+
 func (db *datastore) RepoBatch(user *models.User, repos []*models.Repo) error {
 	stmt := sql.Lookup(db.driver, SQLRepoBatch)
 	for _, repo := range repos {
@@ -33,11 +39,24 @@ func (db *datastore) RepoBatch(user *models.User, repos []*models.Repo) error {
 			repo.Owner,
 			repo.Name,
 			repo.FullName,
-			repo.SCM,
+			repo.Avatar,
 			repo.Link,
 			repo.Clone,
 			repo.Branch,
+			repo.Timeout,
 			repo.IsPrivate,
+			repo.IsTrusted,
+			repo.IsActive,
+			repo.AllowPull,
+			repo.AllowPush,
+			repo.AllowDeploy,
+			repo.AllowTag,
+			repo.Hash,
+			repo.SCM,
+			repo.Config,
+			repo.IsGated,
+			repo.Visibility,
+			repo.Counter,
 		); err != nil {
 			return err
 		}
@@ -49,5 +68,8 @@ func (db *datastore) GetRepoOwnerName(owner, repoName string) (*models.Repo, err
 	stmt := sql.Lookup(db.driver, SQLRepoFindFullName)
 	var repo = new(models.Repo)
 	var err = meddler.QueryRow(db, repo, rebind(stmt), fmt.Sprintf("%s/%s", owner, repoName))
+	if err != nil {
+		logrus.Errorf("[DataStore] GetRepoOwnerName error: %s", err)
+	}
 	return repo, err
 }

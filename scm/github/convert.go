@@ -42,15 +42,16 @@ func convertRepoList(from []github.Repository, u *models.User) []*models.Repo {
 
 func convertRepo(form *github.Repository, u *models.User) *models.Repo {
 	repo := &models.Repo{
-		UserID: u.ID,
-		Name: *form.Name,
-		FullName: *form.FullName,
-		Owner: *form.Owner.Login,
-		Link: *form.HTMLURL,
-		Clone: *form.CloneURL,
-		SCM: models.RepoGithub,
-		Branch: defaultBranch,
-		IsPrivate: *form.Private,
+		Owner: 		*form.Owner.Login,
+		Name: 		*form.Name,
+		FullName: 	*form.FullName,
+		Link: 		*form.HTMLURL,
+		IsPrivate: 	*form.Private,
+		Clone: 		*form.CloneURL,
+		Avatar: 	*form.Owner.AvatarURL,
+		SCM: 		models.RepoGithub,
+		Branch: 	defaultBranch,
+		UserID: 	u.ID,
 	}
 	if form.DefaultBranch != nil {
 		repo.Branch = *form.DefaultBranch

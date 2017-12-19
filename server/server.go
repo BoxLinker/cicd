@@ -17,6 +17,7 @@ import (
 type Config struct {
 	TokenAuthURL string
 	HomeHost string
+	RepoConfig string
 }
 
 type Server struct {
@@ -37,7 +38,7 @@ func (s *Server) Run() error {
 
 	hookRouter := mux.NewRouter()
 	hookRouter.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
-	globalMux.Handle("/v1/cicd/hook", hookRouter)
+	globalMux.Handle("/v1/cicd/hook/", hookRouter)
 
 	apiRouter := mux.NewRouter()
 	apiRouter.HandleFunc("/v1/cicd/auth/repos", s.GetRepos).Methods("GET")

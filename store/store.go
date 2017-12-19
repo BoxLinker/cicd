@@ -13,6 +13,7 @@ type Store interface {
 
 	GetRepo(id int64) (*models.Repo, error)
 	RepoList(u *models.User) ([]*models.Repo)
+	UpdateRepo(repo *models.Repo) error
 	RepoBatch(user *models.User, repos []*models.Repo) error
 	GetRepoOwnerName(owner, repoName string) (*models.Repo, error)
 
@@ -41,4 +42,16 @@ type Store interface {
 	FileList(build *models.Build) ([]*models.File, error)
 	FileFind(proc *models.Proc, name string) (*models.File, error)
 	FileRead(proc *models.Proc, name string) (io.ReadCloser, error)
+
+	SecretFind(*models.Repo, string) (*models.Secret, error)
+	SecretList(*models.Repo) ([]*models.Secret, error)
+	SecretCreate(*models.Secret) error
+	SecretUpdate(*models.Secret) error
+	SecretDelete(*models.Secret) error
+
+	RegistryFind(*models.Repo, string) (*models.Registry, error)
+	RegistryList(*models.Repo) ([]*models.Registry, error)
+	RegistryCreate(*models.Registry) error
+	RegistryUpdate(*models.Registry) error
+	RegistryDelete(*models.Registry) error
 }

@@ -19,11 +19,18 @@ var index = map[string]string{
 	"procs-find-build-pid":      procsFindBuildPid,
 	"procs-find-build-ppid":     procsFindBuildPpid,
 	"procs-delete-build":        procsDeleteBuild,
+	"registry-find-repo":        registryFindRepo,
+	"registry-find-repo-addr":   registryFindRepoAddr,
+	"registry-delete-repo":      registryDeleteRepo,
+	"registry-delete":           registryDelete,
 	"repo-update-counter":       repoUpdateCounter,
 	"repo-insert-ignore":        repoInsertIgnore,
 	"repo-find-user":            repoFindUser,
 	"repo-find-fullName":        repoFindFullName,
 	"repo-del-id":               repoDelId,
+	"secret-find-repo":          secretFindRepo,
+	"secret-find-repo-name":     secretFindRepoName,
+	"secret-delete":             secretDelete,
 	"task-list":                 taskList,
 	"task-delete":               taskDelete,
 	"scm_user-find-u_center_id": scmuserFindUcenterid,
@@ -216,6 +223,41 @@ var procsDeleteBuild = `
 DELETE FROM procs WHERE proc_build_id = ?
 `
 
+var registryFindRepo = `
+SELECT
+ registry_id
+,registry_repo_id
+,registry_addr
+,registry_username
+,registry_password
+,registry_email
+,registry_token
+FROM registry
+WHERE registry_repo_id = ?
+`
+
+var registryFindRepoAddr = `
+SELECT
+ registry_id
+,registry_repo_id
+,registry_addr
+,registry_username
+,registry_password
+,registry_email
+,registry_token
+FROM registry
+WHERE registry_repo_id = ?
+  AND registry_addr = ?
+`
+
+var registryDeleteRepo = `
+DELETE FROM registry WHERE registry_repo_id = ?
+`
+
+var registryDelete = `
+DELETE FROM registry WHERE registry_id = ?
+`
+
 var repoUpdateCounter = `
 UPDATE repos SET repo_counter = ?
 WHERE repo_counter = ?
@@ -228,12 +270,25 @@ INSERT IGNORE INTO repos (
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_scm
+,repo_avatar
 ,repo_link
 ,repo_clone
 ,repo_branch
+,repo_timeout
 ,repo_private
-) VALUES (?,?,?,?,?,?,?,?,?)
+,repo_trusted
+,repo_active
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_deploys
+,repo_allow_tags
+,repo_hash
+,repo_scm
+,repo_config_path
+,repo_gated
+,repo_visibility
+,repo_counter
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 `
 
 var repoFindUser = `
@@ -243,11 +298,24 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_scm
+,repo_avatar
 ,repo_link
 ,repo_clone
 ,repo_branch
+,repo_timeout
 ,repo_private
+,repo_trusted
+,repo_active
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_deploys
+,repo_allow_tags
+,repo_hash
+,repo_scm
+,repo_config_path
+,repo_gated
+,repo_visibility
+,repo_counter
 FROM repos
 WHERE repo_user_id = ?
 ORDER BY repo_name ASC
@@ -262,6 +330,39 @@ LIMIT 1
 var repoDelId = `
 DELETE FROM repos
 WHERE repo_id = ?
+`
+
+var secretFindRepo = `
+SELECT
+ secret_id
+,secret_repo_id
+,secret_name
+,secret_value
+,secret_images
+,secret_events
+,secret_conceal
+,secret_skip_verify
+FROM secrets
+WHERE secret_repo_id = ?
+`
+
+var secretFindRepoName = `
+SELECT
+secret_id
+,secret_repo_id
+,secret_name
+,secret_value
+,secret_images
+,secret_events
+,secret_conceal
+,secret_skip_verify
+FROM secrets
+WHERE secret_repo_id = ?
+  AND secret_name = ?
+`
+
+var secretDelete = `
+DELETE FROM secrets WHERE secret_id = ?
 `
 
 var taskList = `

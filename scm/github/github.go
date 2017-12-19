@@ -157,6 +157,15 @@ func (c *client) FileRef(u *models.User, r *models.Repo, ref, f string) ([]byte,
 	return data.Decode()
 }
 
+func (c *client) Repo(u *models.User, owner, repoName string) (*models.Repo, error) {
+	client := c.newClientToken(u.AccessToken)
+	repo, _, err := client.Repositories.Get(owner, repoName)
+	if err != nil {
+		return nil, err
+	}
+	return convertRepo(repo, u), nil
+}
+
 func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 	client := c.newClientToken(u.AccessToken)
 	opts := new(github.RepositoryListOptions)
@@ -257,4 +266,64 @@ func (c *client) newClientToken(token string) *github.Client {
 
 func (c *client) Hook(r *http.Request) (*models.Repo, *models.Build, error) {
 	return parseHook(r, c.MergeRef)
+}
+
+func (c *client) Activate(u *models.User, r *models.Repo, link string) error {
+	if err := c.Deactivate(u, r, link); err != nil {
+		return err
+	}
+	client := c.newClientToken(u.AccessToken)
+	hook := &github.Hook{
+		Name: github.String("web"),
+		Events: []string{
+			"push",
+			"pull_request",
+			"deployment",
+		},
+		Config: map[string]interface{}{
+			"url": 		link,
+			"content_type": "form",
+		},
+	}
+	_, _, err := client.Repositories.CreateHook(r.Owner, r.Name, hook)
+	return err
+}
+
+func (c *client) Deactivate(u *models.User, r *models.Repo, link string) error {
+	client := c.newClientToken(u.AccessToken)
+	hooks, _, err := client.Repositories.ListHooks(r.Owner, r.Name, nil)
+	if err != nil {
+		return err
+	}
+	match := matchHooks(hooks, link)
+	if match == nil {
+		return nil
+	}
+	_, err = client.Repositories.DeleteHook(r.Owner, r.Name, *match.ID)
+	return err
+}
+
+func matchHooks(hooks []github.Hook, rawurl string) *github.Hook {
+	link, err := url.Parse(rawurl)
+	if err != nil {
+		return nil
+	}
+	for _, hook := range hooks {
+		if hook.ID == nil {
+			continue
+		}
+		v, ok := hook.Config["url"]
+		if !ok {
+			continue
+		}
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		hookurl, err := url.Parse(s)
+		if err == nil && hookurl.Host == link.Host {
+			return &hook
+		}
+	}
+	return nil
 }

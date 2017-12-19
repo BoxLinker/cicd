@@ -15,10 +15,14 @@ import (
 	"github.com/BoxLinker/cicd/logging"
 	"github.com/BoxLinker/cicd/queue"
 	"github.com/BoxLinker/cicd/pubsub"
+	"github.com/BoxLinker/cicd/plugins/secrets"
+	"github.com/BoxLinker/cicd/plugins/registry"
 )
 
 type DefaultManager struct {
 	dataStore store.Store
+	secretService models.SecretService
+	registryService models.RegistryService
 	clientSet *kubernetes.Clientset
 	scmMap map[string]scm.SCM
 	logs logging.Log
@@ -81,6 +85,8 @@ func New(opts *Options) (*DefaultManager, error) {
 		logs: opts.Logs,
 		queue: opts.Queue,
 		pubsub: opts.Pubsub,
+		secretService: secrets.New(opts.Store),
+		registryService: registry.New(opts.Store),
 	}, nil
 
 }
@@ -91,6 +97,18 @@ func (m *DefaultManager) GetSCM(scm string) scm.SCM {
 
 func (m *DefaultManager) Store() store.Store {
 	return m.dataStore
+}
+
+func (m *DefaultManager) SecretService() models.SecretService {
+	return m.secretService
+}
+
+func (m *DefaultManager) RegistryService() models.RegistryService {
+	return m.registryService
+}
+
+func (m *DefaultManager) EnvironStore() models.EnvironStore {
+	return nil
 }
 
 func (m *DefaultManager) ConfigStore() models.ConfigStore {

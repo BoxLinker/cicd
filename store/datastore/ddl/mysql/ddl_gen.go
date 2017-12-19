@@ -17,12 +17,24 @@ var migrations = []struct {
 		stmt: createTableRepos,
 	},
 	{
-		name: "create-table-tasks",
-		stmt: createTableTasks,
+		name: "create-table-builds",
+		stmt: createTableBuilds,
+	},
+	{
+		name: "create-index-builds-repo",
+		stmt: createIndexBuildsRepo,
+	},
+	{
+		name: "create-index-builds-author",
+		stmt: createIndexBuildsAuthor,
 	},
 	{
 		name: "create-table-config",
 		stmt: createTableConfig,
+	},
+	{
+		name: "create-table-tasks",
+		stmt: createTableTasks,
 	},
 	{
 		name: "create-table-procs",
@@ -47,6 +59,50 @@ var migrations = []struct {
 	{
 		name: "create-index-files-procs",
 		stmt: createIndexFilesProcs,
+	},
+	{
+		name: "create-table-registry",
+		stmt: createTableRegistry,
+	},
+	{
+		name: "create-index-registry-repo",
+		stmt: createIndexRegistryRepo,
+	},
+	{
+		name: "create-table-secrets",
+		stmt: createTableSecrets,
+	},
+	{
+		name: "create-index-secrets-repo",
+		stmt: createIndexSecretsRepo,
+	},
+	{
+		name: "alter-table-add-repo-visibility",
+		stmt: alterTableAddRepoVisibility,
+	},
+	{
+		name: "update-table-set-repo-visibility",
+		stmt: updateTableSetRepoVisibility,
+	},
+	{
+		name: "alter-table-add-repo-seq",
+		stmt: alterTableAddRepoSeq,
+	},
+	{
+		name: "update-table-set-repo-seq",
+		stmt: updateTableSetRepoSeq,
+	},
+	{
+		name: "update-table-set-repo-seq-default",
+		stmt: updateTableSetRepoSeqDefault,
+	},
+	{
+		name: "alter-table-add-repo-active",
+		stmt: alterTableAddRepoActive,
+	},
+	{
+		name: "update-table-set-repo-active",
+		stmt: updateTableSetRepoActive,
 	},
 }
 
@@ -174,15 +230,52 @@ CREATE TABLE IF NOT EXISTS repos (
 `
 
 //
-// 003_create_table_tasks.sql
+// 003_create_table_builds.sql
 //
 
-var createTableTasks = `
-CREATE TABLE IF NOT EXISTS tasks (
- task_id      VARCHAR(250) PRIMARY KEY
-,task_data    MEDIUMBLOB
-,task_labels  MEDIUMBLOB
+var createTableBuilds = `
+CREATE TABLE IF NOT EXISTS builds (
+ build_id        INTEGER PRIMARY KEY AUTO_INCREMENT
+,build_repo_id   INTEGER
+,build_number    INTEGER
+,build_event     VARCHAR(500)
+,build_status    VARCHAR(500)
+,build_enqueued  INTEGER
+,build_created   INTEGER
+,build_started   INTEGER
+,build_finished  INTEGER
+,build_commit    VARCHAR(500)
+,build_branch    VARCHAR(500)
+,build_ref       VARCHAR(500)
+,build_refspec   VARCHAR(1000)
+,build_remote    VARCHAR(500)
+,build_title     VARCHAR(1000)
+,build_message   VARCHAR(2000)
+,build_timestamp INTEGER
+,build_author    VARCHAR(500)
+,build_avatar    VARCHAR(1000)
+,build_email     VARCHAR(500)
+,build_link      VARCHAR(1000)
+,build_deploy    VARCHAR(500)
+,build_signed    BOOLEAN
+,build_verified  BOOLEAN
+,build_parent    INTEGER
+,build_error     VARCHAR(500)
+,build_reviewer  VARCHAR(250)
+,build_reviewed  INTEGER
+,build_sender    VARCHAR(250)
+,build_config_id INTEGER
+
+,UNIQUE(build_number, build_repo_id)
 );
+`
+
+var createIndexBuildsRepo = `
+CREATE INDEX ix_build_repo ON builds (build_repo_id);
+`
+
+var createIndexBuildsAuthor = `
+CREATE INDEX ix_build_author ON builds (build_author);
 `
 
 //
@@ -201,7 +294,19 @@ CREATE TABLE IF NOT EXISTS config (
 `
 
 //
-// 005_create_table_procs.sql
+// 005_create_table_tasks.sql
+//
+
+var createTableTasks = `
+CREATE TABLE IF NOT EXISTS tasks (
+ task_id      VARCHAR(250) PRIMARY KEY
+,task_data    MEDIUMBLOB
+,task_labels  MEDIUMBLOB
+);
+`
+
+//
+// 006_create_table_procs.sql
 //
 
 var createTableProcs = `
@@ -230,7 +335,7 @@ CREATE INDEX proc_build_ix ON procs (proc_build_id);
 `
 
 //
-// 006_create_table_logs.sql
+// 007_create_table_logs.sql
 //
 
 var createTableLogs = `
@@ -244,7 +349,7 @@ CREATE TABLE IF NOT EXISTS logs (
 `
 
 //
-// 007_create_table_files.sql
+// 008_create_table_files.sql
 //
 
 var createTableFiles = `
@@ -268,4 +373,98 @@ CREATE INDEX file_build_ix ON files (file_build_id);
 
 var createIndexFilesProcs = `
 CREATE INDEX file_proc_ix  ON files (file_proc_id);
+`
+
+//
+// 009_create_table_registry.sql
+//
+
+var createTableRegistry = `
+CREATE TABLE IF NOT EXISTS registry (
+ registry_id        INTEGER PRIMARY KEY AUTO_INCREMENT
+,registry_repo_id   INTEGER
+,registry_addr      VARCHAR(250)
+,registry_email     VARCHAR(500)
+,registry_username  VARCHAR(2000)
+,registry_password  VARCHAR(8000)
+,registry_token     VARCHAR(2000)
+
+,UNIQUE(registry_addr, registry_repo_id)
+);
+`
+
+var createIndexRegistryRepo = `
+CREATE INDEX ix_registry_repo ON registry (registry_repo_id);
+`
+
+//
+// 010_create_table_secets.sql
+//
+
+var createTableSecrets = `
+CREATE TABLE IF NOT EXISTS secrets (
+ secret_id          INTEGER PRIMARY KEY AUTO_INCREMENT
+,secret_repo_id     INTEGER
+,secret_name        VARCHAR(250)
+,secret_value       MEDIUMBLOB
+,secret_images      VARCHAR(2000)
+,secret_events      VARCHAR(2000)
+,secret_skip_verify BOOLEAN
+,secret_conceal     BOOLEAN
+
+,UNIQUE(secret_name, secret_repo_id)
+);
+`
+
+var createIndexSecretsRepo = `
+CREATE INDEX ix_secrets_repo  ON secrets  (secret_repo_id);
+`
+
+//
+// 011_add_column_repo_visibility.sql
+//
+
+var alterTableAddRepoVisibility = `
+ALTER TABLE repos ADD COLUMN repo_visibility VARCHAR(50)
+`
+
+var updateTableSetRepoVisibility = `
+UPDATE repos
+SET repo_visibility = CASE
+  WHEN repo_private = false THEN 'public'
+  ELSE 'private'
+  END
+`
+
+//
+// 012_add_column_repo_seq.sql
+//
+
+var alterTableAddRepoSeq = `
+ALTER TABLE repos ADD COLUMN repo_counter INTEGER;
+`
+
+var updateTableSetRepoSeq = `
+UPDATE repos SET repo_counter = (
+  SELECT max(build_number)
+  FROM builds
+  WHERE builds.build_repo_id = repos.repo_id
+)
+`
+
+var updateTableSetRepoSeqDefault = `
+UPDATE repos SET repo_counter = 0
+WHERE repo_counter IS NULL
+`
+
+//
+// 013_add_column_repo_active.sql
+//
+
+var alterTableAddRepoActive = `
+ALTER TABLE repos ADD COLUMN repo_active BOOLEAN
+`
+
+var updateTableSetRepoActive = `
+UPDATE repos SET repo_active = true
 `

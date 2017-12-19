@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/BoxLinker/cicd/pubsub"
 	"strconv"
+	"github.com/BoxLinker/cicd/modules/token"
 )
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
@@ -63,9 +64,26 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo check whether repo is active
+	if !repo.IsActive {
+		msg := fmt.Sprintf("ignoring hook. %s/%s is inactive.", tmpRepo.Owner, tmpRepo.Name)
+		logrus.Errorln(msg)
+		http.Error(w, msg, http.StatusNoContent)
+		return
+	}
 
-	// todo get the token and verify the hook is authroized
+	parsed, err := token.ParseRequest(r, func (t *token.Token) (string, error) {
+		return repo.Hash, nil
+	})
+	if err != nil {
+		logrus.Errorf("failed to parse token from hook for %s. %s", repo.FullName, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if parsed.Text != repo.FullName {
+		logrus.Errorf("failed to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
+		http.Error(w, "failed to verify token from hook.", http.StatusForbidden)
+		return
+	}
 
 	if repo.UserID == 0 {
 		logrus.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
@@ -156,6 +174,31 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 	buildB, _ := json.Marshal(build)
 	w.Write(buildB)
 
+	if build.Status == models.StatusBlocked {
+		return
+	}
+
+	envs := map[string]string{}
+	if environStore := s.Manager.EnvironStore(); environStore != nil {
+		globals, _ := environStore.EnvironList(repo)
+		for _, global := range globals {
+			envs[global.Name] = global.Value
+		}
+	}
+
+	secs, err := s.Manager.SecretService().SecretListBuild(repo, build)
+	if err != nil {
+		logrus.Debugf("Error getting secrets for %s#%s. %s", repo.FullName, build.Number, err)
+	}
+
+	regs, err := s.Manager.RegistryService().RegistryList(repo)
+	if err != nil {
+		logrus.Debugf("Error getting registry credentials fro %s#%d. %s", repo.FullName, build.Number, err)
+	}
+
+	// get the previous build so that we can send
+	// on status change notifications
+
 	defer func(){
 		uri := fmt.Sprintf("%s/%s/%d", httplib.GetURL(r), repo.FullName, build.Number)
 		err = remote.Status(user, repo, build, uri)
@@ -167,6 +210,9 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 	b := builder{
 		Repo: repo,
 		Curr: build,
+		Secs: secs,
+		Regs: regs,
+		Envs: envs,
 		Link: httplib.GetURL(r),
 		Yaml: conf.Data,
 	}
@@ -253,8 +299,12 @@ type builder struct {
 	Repo *models.Repo
 	Curr *models.Build
 	Last *models.Build
+	Netrc *models.Netrc
+	Secs  []*models.Secret
+	Regs  []*models.Registry
 	Link string
 	Yaml string // 项目的 ci 配置文件
+	Envs  map[string]string
 }
 
 type buildItem struct {

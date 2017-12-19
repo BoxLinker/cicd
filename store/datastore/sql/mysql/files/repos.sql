@@ -11,12 +11,25 @@ INSERT IGNORE INTO repos (
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_scm
+,repo_avatar
 ,repo_link
 ,repo_clone
 ,repo_branch
+,repo_timeout
 ,repo_private
-) VALUES (?,?,?,?,?,?,?,?,?)
+,repo_trusted
+,repo_active
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_deploys
+,repo_allow_tags
+,repo_hash
+,repo_scm
+,repo_config_path
+,repo_gated
+,repo_visibility
+,repo_counter
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 
 -- name: repo-find-user
 
@@ -26,11 +39,24 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_scm
+,repo_avatar
 ,repo_link
 ,repo_clone
 ,repo_branch
+,repo_timeout
 ,repo_private
+,repo_trusted
+,repo_active
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_deploys
+,repo_allow_tags
+,repo_hash
+,repo_scm
+,repo_config_path
+,repo_gated
+,repo_visibility
+,repo_counter
 FROM repos
 WHERE repo_user_id = ?
 ORDER BY repo_name ASC

@@ -27,3 +27,20 @@ type Repo struct {
 	Hash        string `json:"-"                        meddler:"repo_hash"`
 
 }
+
+// Update updates the repository with values from the given Repo.
+func (r *Repo) Update(from *Repo) {
+	r.Avatar = from.Avatar
+	r.Link = from.Link
+	r.SCM = from.SCM
+	r.Clone = from.Clone
+	r.Branch = from.Branch
+	if from.IsPrivate != r.IsPrivate {
+		if from.IsPrivate {
+			r.Visibility = VisibilityPrivate
+		} else {
+			r.Visibility = VisibilityPublic
+		}
+	}
+	r.IsPrivate = from.IsPrivate
+}
