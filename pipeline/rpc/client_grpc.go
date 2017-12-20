@@ -10,6 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"github.com/Sirupsen/logrus"
 )
 
 // generate protobuffs
@@ -43,7 +44,9 @@ func (c *client) Next(ctx context.Context, f Filter) (*Pipeline, error) {
 	req.Filter.Expr = f.Expr
 	req.Filter.Labels = f.Labels
 	for {
+		logrus.Info("client next...")
 		res, err = c.client.Next(ctx, req)
+		logrus.Info("client next receive %+v", res)
 		if err == nil {
 			break
 		}

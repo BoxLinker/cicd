@@ -119,6 +119,7 @@ func repoStatus(client *github.Client, r *models.Repo, b *models.Build, link, ct
 		Description: 	github.String(convertDesc(b.Status)),
 		TargetURL: 		github.String(link),
 	}
+	logrus.Debugf("SCM github CreateStatus owner(%s) repo(%s) commit(%s) data(%+v)", r.Owner, r.Name, b.Commit, &data)
 	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, b.Commit, &data)
 	return err
 }

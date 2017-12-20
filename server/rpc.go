@@ -46,11 +46,14 @@ func (s *BoxCIServer) Next(c oldcontext.Context, req *proto.NextRequest) (*proto
 	res := new(proto.NextReply)
 	pipeline, err := peer.Next(c, filter)
 	if err != nil {
+		logrus.Errorf("peer.Next err %s", err)
 		return res, err
 	}
 	if pipeline == nil {
+		logrus.Infof("peer.Next pipeline nil")
 		return res, err
 	}
+	logrus.Infof("peer.Next (%+v)", pipeline)
 
 	res.Pipeline = new(proto.Pipeline)
 	res.Pipeline.Id = pipeline.ID

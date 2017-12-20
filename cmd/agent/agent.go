@@ -78,16 +78,19 @@ func loop(c *cli.Context) error {
 	parallel := c.Int("max-procs")
 	wg.Add(parallel)
 
-	log.Info().Msgf("Ready to start runner %d .", parallel)
 	for i := 0; i < parallel; i++ {
-		go func(){
-			defer wg.Done()
+		go func(index int){
+			log.Info().Msgf("Ready to start runner %d .", index)
+			defer func(){
+				wg.Done()
+				log.Info().Msgf("runner %d exit.", index)
+			}()
 			for {
 				if sigterm.IsSet() {
 					return
 				}
 				r := runner{
-					index: i,
+					index: index,
 					client: client,
 					filter: filter,
 					hostname: hostname,
@@ -97,7 +100,7 @@ func loop(c *cli.Context) error {
 					return
 				}
 			}
-		}()
+		}(i)
 	}
 
 	wg.Wait()

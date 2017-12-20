@@ -27,6 +27,8 @@ type Store interface {
 	TaskDelete(string) error
 
 	GetBuild(int64) (*models.Build, error)
+	// gets the last build before build number N
+	GetBuildLastBefore(repo *models.Repo, branch string, n int64) (*models.Build, error)
 	CreateBuild(*models.Build, ...*models.Proc) error
 	UpdateBuild(*models.Build) error
 

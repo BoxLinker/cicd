@@ -6,11 +6,21 @@ import (
 	"github.com/BoxLinker/cicd/store/datastore/sql"
 	"time"
 	"github.com/russross/meddler"
+	"github.com/Sirupsen/logrus"
 )
 
 func (db *datastore) GetBuild(id int64) (*models.Build, error) {
 	var build = new(models.Build)
 	var err = meddler.Load(db, "builds", build, id)
+	return build, err
+}
+
+func (db *datastore) GetBuildLastBefore(repo *models.Repo, branch string, num int64)(*models.Build, error) {
+	var build = new(models.Build)
+	var err = meddler.QueryRow(db, build, rebind(buildLastBeforeQuery), repo.ID, branch, num)
+	if err != nil {
+		logrus.Errorf("[DataStore:GetBuildLastBefore] (repo:%d, branch:%s num:%d) error: %s", repo.ID, branch, num, err)
+	}
 	return build, err
 }
 
@@ -72,3 +82,13 @@ func (db *datastore) incrementRepo(id int64, old, new int) (int, error) {
 	}
 	return new, nil
 }
+
+const buildLastBeforeQuery = `
+SELECT *
+FROM builds
+WHERE build_repo_id = ?
+  AND build_branch = ?
+  AND build_id < ?
+ORDER BY build_number DESC
+LIMIT 1
+`

@@ -40,6 +40,11 @@ func main(){
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
+		cli.StringFlag{
+			EnvVar: "PLATFORM",
+			Name: "platform",
+			Value: "linux/amd64",
+		},
 	}
 	app.Action = loop
 	if err := app.Run(os.Args); err != nil {

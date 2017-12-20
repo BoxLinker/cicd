@@ -190,6 +190,10 @@
 			"revisionTime": "2017-12-13T20:56:31Z"
 		},
 		{
+			"path": "github.com/docker/docker/reference",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "JbiWTzH699Sqz25XmDlsARpMN9w=",
 			"origin": "github.com/docker/docker/vendor/github.com/docker/go-connections/nat",
 			"path": "github.com/docker/go-connections/nat",

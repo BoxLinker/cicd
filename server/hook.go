@@ -21,6 +21,11 @@ import (
 	"github.com/BoxLinker/cicd/pubsub"
 	"strconv"
 	"github.com/BoxLinker/cicd/modules/token"
+	"github.com/BoxLinker/cicd/pipeline/frontend/yaml/compiler"
+	"github.com/BoxLinker/cicd/modules/envsubst"
+	"strings"
+	"github.com/BoxLinker/cicd/modules/linter"
+	"math/rand"
 )
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
@@ -198,18 +203,20 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 
 	// get the previous build so that we can send
 	// on status change notifications
+	last, _ := s.Manager.Store().GetBuildLastBefore(repo, build.Branch, build.ID)
 
 	defer func(){
 		uri := fmt.Sprintf("%s/%s/%d", httplib.GetURL(r), repo.FullName, build.Number)
 		err = remote.Status(user, repo, build, uri)
 		if err != nil {
-			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+			logrus.Errorf("error setting commit status for %s/%d, err:(%s)", repo.FullName, build.Number, err)
 		}
 	}()
 
 	b := builder{
 		Repo: repo,
 		Curr: build,
+		Last: last,
 		Secs: secs,
 		Regs: regs,
 		Envs: envs,
@@ -342,9 +349,94 @@ func (b *builder) Build() ([]*buildItem, error) {
 			environ[k] = v
 		}
 
-		// todo secrets
+		var secrets []compiler.Secret
+		for _, sec := range b.Secs {
+			if !sec.Match(b.Curr.Event) {
+				continue
+			}
+			secrets = append(secrets, compiler.Secret{
+				Name: sec.Name,
+				Value: sec.Value,
+				Match: sec.Images,
+			})
+		}
 
-		item := &buildItem{}
+		y := b.Yaml
+		s, err := envsubst.Eval(y, func(name string) string {
+			env := environ[name]
+			if strings.Contains(env, "\n") {
+				env = fmt.Sprintf("%q", env)
+			}
+			return env
+		})
+		if err != nil {
+			return nil, err
+		}
+		y = s
+
+		parsed, err := yaml.ParseString(y)
+		if err != nil {
+			return nil, err
+		}
+		metadata.Sys.Arch = parsed.Platform
+		if metadata.Sys.Arch == "" {
+			metadata.Sys.Arch = "linux/amd64"
+		}
+
+		lerr := linter.New(
+			linter.WithTrusted(b.Repo.IsTrusted),
+		).Lint(parsed)
+		if lerr != nil {
+			return nil, lerr
+		}
+
+		var registries []compiler.Registry
+		for _, reg := range b.Regs {
+			registries = append(registries, compiler.Registry{
+				Hostname: reg.Address,
+				Username: reg.Username,
+				Password: reg.Password,
+				Email: 	  reg.Email,
+			})
+		}
+
+		ir := compiler.New(
+			compiler.WithEnviron(environ),
+			compiler.WithEnviron(b.Envs),
+			//compiler.WithEscalated(...),
+			//compiler.WithResourceLimit(Config.Pipeline.Limits.MemSwapLimit, Config.Pipeline.Limits.MemLimit, Config.Pipeline.Limits.ShmSize, Config.Pipeline.Limits.CPUQuota, Config.Pipeline.Limits.CPUShares, Config.Pipeline.Limits.CPUSet),
+			//compiler.WithVolumes(Config.Pipeline.Volumes...),
+			//compiler.WithNetworks(Config.Pipeline.Networks...),
+			compiler.WithLocal(false),
+			//compiler.WithOption(
+			//	compiler.WithNetrc(
+			//		b.Netrc.Login,
+			//		b.Netrc.Password,
+			//		b.Netrc.Machine,
+			//	),
+			//	b.Repo.IsPrivate,
+			//),
+			compiler.WithRegistry(registries...),
+			compiler.WithSecret(secrets...),
+			compiler.WithPrefix(
+				fmt.Sprintf(
+					"%d_%d",
+					proc.ID,
+					rand.Int(),
+				),
+			),
+			compiler.WithEnviron(proc.Environ),
+			compiler.WithProxy(),
+			compiler.WithWorkspaceFromURL("/drone", b.Repo.Link),
+			compiler.WithMetadata(metadata),
+		).Compile(parsed)
+
+		item := &buildItem{
+			Proc: proc,
+			Config: ir,
+			Labels: parsed.Labels,
+			Platform: metadata.Sys.Arch,
+		}
 		if item.Labels == nil {
 			item.Labels = map[string]string{}
 		}

@@ -18,6 +18,12 @@ type Config struct {
 	TokenAuthURL string
 	HomeHost string
 	RepoConfig string
+	PipeLine struct{
+		Limits models.ResourceLimit
+		Volumes []string
+		Networks []string
+		Privileged []string
+	}
 }
 
 type Server struct {

@@ -4,6 +4,7 @@ import (
 	"github.com/BoxLinker/cicd/pipeline/frontend/yaml/types"
 	"path/filepath"
 	libcompose "github.com/docker/libcompose/yaml"
+	"github.com/BoxLinker/cicd/pipeline/frontend"
 )
 
 type (
@@ -85,4 +86,47 @@ func (c *Constraint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		out2...,
 	)
 	return nil
+}
+
+
+// Match returns true if all constraints match the given input. If a single
+// constraint fails a false value is returned.
+func (c *Constraints) Match(metadata frontend.Metadata) bool {
+	return c.Platform.Match(metadata.Sys.Arch) &&
+		c.Environment.Match(metadata.Curr.Target) &&
+		c.Event.Match(metadata.Curr.Event) &&
+		c.Branch.Match(metadata.Curr.Commit.Branch) &&
+		c.Repo.Match(metadata.Repo.Name) &&
+		c.Ref.Match(metadata.Curr.Commit.Ref) &&
+		c.Matrix.Match(metadata.Job.Matrix)
+}
+
+
+// Match returns true if the params matches the include key values and does not
+// match any of the exclude key values.
+func (c *ConstraintMap) Match(params map[string]string) bool {
+	// when no includes or excludes automatically match
+	if len(c.Include) == 0 && len(c.Exclude) == 0 {
+		return true
+	}
+	// exclusions are processed first. So we can include everything and then
+	// selectively include others.
+	if len(c.Exclude) != 0 {
+		var matches int
+
+		for key, val := range c.Exclude {
+			if params[key] == val {
+				matches++
+			}
+		}
+		if matches == len(c.Exclude) {
+			return false
+		}
+	}
+	for key, val := range c.Include {
+		if params[key] != val {
+			return false
+		}
+	}
+	return true
 }
