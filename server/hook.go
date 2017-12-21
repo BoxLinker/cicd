@@ -342,9 +342,9 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 		metadata := metadataFromStruct(b.Repo, b.Curr, b.Last, proc, b.Link)
 		environ := metadata.Environ()
-		for k, v := range metadata.EnvironDrone() {
-			environ[k] = v
-		}
+		//for k, v := range metadata.EnvironDrone() {
+		//	environ[k] = v
+		//}
 		for k, v := range axis {
 			environ[k] = v
 		}
@@ -427,7 +427,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			),
 			compiler.WithEnviron(proc.Environ),
 			compiler.WithProxy(),
-			compiler.WithWorkspaceFromURL("/drone", b.Repo.Link),
+			compiler.WithWorkspaceFromURL("/boxci", b.Repo.Link),
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
 

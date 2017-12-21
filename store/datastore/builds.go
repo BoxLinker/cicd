@@ -15,6 +15,15 @@ func (db *datastore) GetBuild(id int64) (*models.Build, error) {
 	return build, err
 }
 
+func (db *datastore) GetBuildNumber(repo *models.Repo, num int) (*models.Build, error) {
+	var build = new(models.Build)
+	var err = meddler.QueryRow(db, build, rebind(buildNumberQuery), repo.ID, num)
+	if err != nil {
+		logrus.Errorf("[DataStore:GetBuildNumber] error: %s", err)
+	}
+	return build, err
+}
+
 func (db *datastore) GetBuildLastBefore(repo *models.Repo, branch string, num int64)(*models.Build, error) {
 	var build = new(models.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildLastBeforeQuery), repo.ID, branch, num)
@@ -82,6 +91,14 @@ func (db *datastore) incrementRepo(id int64, old, new int) (int, error) {
 	}
 	return new, nil
 }
+
+const buildNumberQuery = `
+SELECT *
+FROM builds
+WHERE build_repo_id = ?
+  AND build_number = ?
+LIMIT 1;
+`
 
 const buildLastBeforeQuery = `
 SELECT *

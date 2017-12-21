@@ -6,7 +6,16 @@ import (
 	"github.com/BoxLinker/cicd/store/datastore/sql"
 	"github.com/russross/meddler"
 	"io/ioutil"
+	"bytes"
 )
+
+func (db *datastore) LogFind(proc *models.Proc) (io.ReadCloser, error) {
+	stmt := sql.Lookup(db.driver, "logs-find-proc")
+	data := new(logData)
+	err := meddler.QueryRow(db, data, stmt, proc.ID)
+	buf := bytes.NewBuffer(data.Data)
+	return ioutil.NopCloser(buf), err
+}
 
 func (db *datastore) LogSave(proc *models.Proc, r io.Reader) error {
 	stmt := sql.Lookup(db.driver, "logs-find-proc")

@@ -27,18 +27,21 @@ type Store interface {
 	TaskDelete(string) error
 
 	GetBuild(int64) (*models.Build, error)
+	GetBuildNumber(repo *models.Repo, num int) (*models.Build, error)
 	// gets the last build before build number N
 	GetBuildLastBefore(repo *models.Repo, branch string, n int64) (*models.Build, error)
 	CreateBuild(*models.Build, ...*models.Proc) error
 	UpdateBuild(*models.Build) error
 
 	ProcCreate([]*models.Proc) error
+	ProcFind(build *models.Build, pid int) (*models.Proc, error)
 	ProcLoad(int64) (*models.Proc, error)
 	ProcChild(build *models.Build, pid int, child string) (*models.Proc, error)
 	ProcUpdate(proc *models.Proc) error
 	ProcList(build *models.Build) ([]*models.Proc, error)
 
 	LogSave(proc *models.Proc, reader io.Reader) error
+	LogFind(proc *models.Proc) (io.ReadCloser, error)
 
 	FileCreate(file *models.File, reader io.Reader) error
 	FileList(build *models.Build) ([]*models.File, error)

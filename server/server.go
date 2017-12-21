@@ -35,43 +35,84 @@ type Server struct {
 func (s *Server) Run() error {
 
 	logrus.Debugf("Server Config: \n%+v", s.Config)
-	cs := boxlinker.Cors
-	globalMux := http.NewServeMux()
 
-	apiTokenM := middleware.NewAuthAPITokenRequired(s.Config.TokenAuthURL)
+	loginRequired := middleware.NewAuthAPITokenRequired(s.Config.TokenAuthURL)
 	scmRequired := middleware.NewSCMRequired()
 	authorizeTokenM := middleware.NewAuthorizeTokenRequired(s.Config.TokenAuthURL, fmt.Sprintf("%s/login", s.Config.HomeHost))
+	setRepoM := middleware.NewSetRepo(s.Manager)
 
-	hookRouter := mux.NewRouter()
-	hookRouter.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
-	globalMux.Handle("/v1/cicd/hook/", hookRouter)
+	//globalMux := http.NewServeMux()
 
-	apiRouter := mux.NewRouter()
-	apiRouter.HandleFunc("/v1/cicd/auth/repos", s.GetRepos).Methods("GET")
-	apiRouter.HandleFunc("/v1/cicd/auth/repos/{owner}/{name}", s.PostRepo).Methods("POST")
+	router := mux.NewRouter()
 
-	authRouter := negroni.New()
-	authRouter.Use(negroni.HandlerFunc(scmRequired.HandlerFuncWithNext))
-	authRouter.Use(negroni.HandlerFunc(apiTokenM.HandlerFuncWithNext))
-	authRouter.UseHandler(apiRouter)
-	globalMux.Handle("/v1/cicd/auth/", authRouter)
+	//hookRouter := mux.NewRouter()
+	//hookRouter.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
+	//globalMux.Handle("/v1/cicd/hook/", hookRouter)
+	//
+	//userRouter := mux.NewRouter()
+	//userRouter.HandleFunc("/v1/cicd/user/repos", s.GetRepos).Methods("GET")
+	//userRouterN := negroni.New()
+	//userRouterN.UseHandler(userRouter)
+	//globalMux.Handle("/v1/cicd/user", userRouterN)
 
-	// codebase auth router
-	authorizeRouter := mux.NewRouter()
-	authorizeRouter.HandleFunc("/v1/cicd/authorize/{scm}", s.AuthCodeBase).Methods("GET", "POST")
-	tokenAuthRedirectRouter := negroni.New()
-	tokenAuthRedirectRouter.Use(negroni.HandlerFunc(authorizeTokenM.HandlerFuncWithNext))
-	tokenAuthRedirectRouter.UseHandler(authorizeRouter)
-	globalMux.Handle("/v1/cicd/authorize/", tokenAuthRedirectRouter)
+	router.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
+
+	userRouter := getRouter(router, "/v1/cicd/user",
+		loginRequired, scmRequired)
+	{
+		userRouter.HandleFunc("/repos", s.GetRepos).Methods("GET")
+	}
+
+	repoRouter := getRouter(router, "/v1/cicd/repos/{owner}/{name}",
+		loginRequired, scmRequired, setRepoM)
+	{
+		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
+		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
+	}
+
+	authorizeRouter := getRouter(router, "/v1/cicd/authorize",
+		authorizeTokenM)
+	{
+		authorizeRouter.HandleFunc("/{scm}", s.AuthCodeBase).Methods("POST", "GET")
+	}
+
+	//repoRouter := mux.NewRouter().
+	//	PathPrefix("/v1/cicd/repos/{owner}/{name}").Subrouter()
+	//repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
+	//repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
+	//
+	//router.PathPrefix("/v1/cicd/repos/{owner}/{name}").
+	//	Handler(negroni.New(
+	//		loginRequired,
+	//		scmRequired,
+	//		setRepoM,
+	//		negroni.Wrap(repoRouter),
+	//	))
+
+	//authorizeRouter := mux.NewRouter()
+	//authorizeRouter.HandleFunc("/v1/cicd/authorize/{scm}", s.AuthCodeBase).Methods("GET", "POST")
+	//tokenAuthRedirectRouter := negroni.New(authorizeTokenM)
+	//tokenAuthRedirectRouter.UseHandler(authorizeRouter)
+	//globalMux.Handle("/v1/cicd/authorize/", tokenAuthRedirectRouter)
+
 
 	ss := http.Server{
 		Addr: s.Listen,
-		Handler: context.ClearHandler(cs.Handler(globalMux)),
+		Handler: context.ClearHandler(boxlinker.Cors.Handler(router)),
 	}
 
 	logrus.Infof("CICD server running on %s", s.Listen)
 	return ss.ListenAndServe()
 }
+
+func getRouter(pRouter *mux.Router, path string, middlewares ...negroni.Handler) *mux.Router {
+	subRouter := mux.NewRouter().PathPrefix(path).Subrouter()
+	r := negroni.New(middlewares...)
+	r.UseHandler(subRouter)
+	pRouter.PathPrefix(path).Handler(r)
+	return subRouter
+}
+
 
 func (a *Server) getCtxUserID(r *http.Request) string {
 	us := r.Context().Value("user")

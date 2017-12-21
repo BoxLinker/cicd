@@ -16,6 +16,13 @@ func (db *datastore) ProcCreate(procs []*models.Proc) error {
 	return nil
 }
 
+func (db *datastore) ProcFind(build *models.Build, pid int) (*models.Proc, error) {
+	stmt := sql.Lookup(db.driver, "procs-find-build-pid")
+	proc := new(models.Proc)
+	err := meddler.QueryRow(db, proc, stmt, build.ID, pid)
+	return proc, err
+}
+
 func (db *datastore) ProcLoad(id int64) (*models.Proc, error) {
 	stmt := sql.Lookup(db.driver, "procs-find-id")
 	proc := new(models.Proc)

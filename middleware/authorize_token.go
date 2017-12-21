@@ -7,6 +7,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/BoxLinker/cicd/auth"
 	"github.com/cabernety/gopkg/httplib"
+	"github.com/codegangsta/negroni"
 )
 
 type AuthorizeTokenRequired struct {
@@ -15,14 +16,14 @@ type AuthorizeTokenRequired struct {
 
 }
 
-func NewAuthorizeTokenRequired(url string, redirectURL string) Middleware {
+func NewAuthorizeTokenRequired(url string, redirectURL string) negroni.Handler {
 	return &AuthorizeTokenRequired{
 		authUrl: url,
 		redirectURL: redirectURL,
 	}
 }
 
-func (a *AuthorizeTokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+func (a *AuthorizeTokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
 	token := httplib.GetCookie(r, "X-Access-Token")
 	logrus.Debugf("request token (%s)", token)
 	if token == "" {

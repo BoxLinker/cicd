@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/rs/zerolog/log"
 )
 
 type engine struct {
@@ -113,15 +114,27 @@ func (e *engine) Kill(proc *backend.Step) error {
 }
 
 func (e *engine) Wait(proc *backend.Step) (*backend.State, error) {
-	_, err := e.client.ContainerWait(noContext, proc.Name, container.WaitConditionNotRunning)
+	wait, err := e.client.ContainerWait(noContext, proc.Name, container.WaitConditionNextExit)
 	if err != nil {
 		// todo
+	}
+DONE:
+	for {
+		select {
+		case werr := <-err:
+			log.Error().Msgf("=> ContainerWait error: %s", werr)
+			return nil, werr
+		case body := <-wait:
+			log.Debug().Msgf("==> ContainerWait result (%+v)", body)
+			break DONE
+		}
 	}
 
 	info, ierr := e.client.ContainerInspect(noContext, proc.Name)
 	if ierr != nil {
 		return nil, ierr
 	}
+	log.Debug().Msgf("===> ContainerInspect: (%+v)", info.State)
 	if info.State.Running {
 		// todo
 	}

@@ -6,19 +6,20 @@ import (
 	"golang.org/x/net/context"
 	"github.com/Sirupsen/logrus"
 	"github.com/BoxLinker/cicd/auth"
+	"github.com/codegangsta/negroni"
 )
 
 type AuthAPITokenRequired struct {
 	authUrl string
 }
 
-func NewAuthAPITokenRequired(url string) Middleware {
+func NewAuthAPITokenRequired(url string) negroni.Handler {
 	return &AuthAPITokenRequired{
 		authUrl: url,
 	}
 }
 
-func (a *AuthAPITokenRequired) HandlerFuncWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+func (a *AuthAPITokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
 	token := r.Header.Get("X-Access-Token")
 	logrus.Debugf("request token (%s)", token)
 	if token == "" {
