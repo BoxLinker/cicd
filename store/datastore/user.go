@@ -1,11 +1,12 @@
 package datastore
 
 import (
+	"time"
+
 	"github.com/BoxLinker/cicd/models"
 	"github.com/BoxLinker/cicd/store/datastore/sql"
-	"github.com/russross/meddler"
 	"github.com/Sirupsen/logrus"
-	"time"
+	"github.com/russross/meddler"
 )
 
 func (db *datastore) SaveUser(user *models.User) error {
@@ -25,7 +26,7 @@ func (db *datastore) GetUserByUCenterID(uCenterID string, scm string) *models.Us
 	stmt := sql.Lookup(db.driver, SQLSCMUsersFindByUCenterID)
 	u := new(models.User)
 	if err := meddler.QueryRow(db, u, stmt, uCenterID, scm); err != nil {
-		logrus.Errorf("GetUserByUCenterID err (%s)", err.Error())
+		logrus.Errorf("GetUserByUCenterID(%s) err (%s)", uCenterID, err.Error())
 		return nil
 	}
 	u.Created = time.Unix(u.CreatedUnix, 0)

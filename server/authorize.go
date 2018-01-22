@@ -1,14 +1,15 @@
 package server
 
 import (
-	"net/http"
-	"github.com/Sirupsen/logrus"
 	"fmt"
+	"net/http"
+
 	"github.com/BoxLinker/cicd/models"
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 )
 
-func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
+func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request) {
 	scmType := mux.Vars(r)["scm"]
 	logrus.Debugf("SCM Auth (%s)", scmType)
 	logrus.Debugf("scmType (%+v) exists (%+v)", scmType, models.SCMExists(scmType))
@@ -33,6 +34,7 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 	scmUser.UCenterID = uid
 
 	if u := s.Manager.GetUserByUCenterID(scmUser.UCenterID, scmUser.SCM); u != nil {
+		logrus.Debugf("user(%s) already exists, update", scmUser.Login)
 		if u.ID <= 0 {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, "user id is 0"), 301)
 			return
@@ -45,6 +47,7 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 			return
 		}
 	} else {
+		logrus.Debugf("user(%s) does not exist, insert", scmUser.Login)
 		if err := s.Manager.SaveUser(scmUser); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("%s/?error=server_interval_error&err_msg=%s", s.Config.HomeHost, err.Error()), 301)
 			return
@@ -53,4 +56,3 @@ func (s *Server) AuthCodeBase(w http.ResponseWriter, r *http.Request){
 
 	http.Redirect(w, r, fmt.Sprintf("%s/cicd", s.Config.HomeHost), 301)
 }
-

@@ -1,17 +1,18 @@
 package server
 
 import (
-	"net/http"
-	"github.com/BoxLinker/boxlinker-api"
-	"strconv"
-	"github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
-	"github.com/BoxLinker/cicd/models"
-	"fmt"
 	"encoding/base32"
-	"github.com/gorilla/securecookie"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/BoxLinker/boxlinker-api"
+	"github.com/BoxLinker/cicd/models"
 	"github.com/BoxLinker/cicd/modules/token"
+	"github.com/Sirupsen/logrus"
 	"github.com/cabernety/gopkg/httplib"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/securecookie"
 )
 
 func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {

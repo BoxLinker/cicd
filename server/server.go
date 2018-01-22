@@ -1,35 +1,37 @@
 package server
 
 import (
-	"github.com/BoxLinker/boxlinker-api"
-	"github.com/gorilla/mux"
-	"net/http"
-	"github.com/gorilla/context"
-	"github.com/BoxLinker/cicd/middleware"
-	"github.com/codegangsta/negroni"
-	"github.com/Sirupsen/logrus"
-	"github.com/BoxLinker/cicd/manager"
-	//"fmt"
-	"github.com/BoxLinker/cicd/models"
 	"fmt"
+	"net/http"
+
+	"github.com/BoxLinker/boxlinker-api"
+	"github.com/BoxLinker/cicd/manager"
+	"github.com/BoxLinker/cicd/middleware"
+	"github.com/Sirupsen/logrus"
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	//"fmt"
+
+	"github.com/BoxLinker/cicd/models"
 )
 
 type Config struct {
 	TokenAuthURL string
-	HomeHost string
-	RepoConfig string
-	PipeLine struct{
-		Limits models.ResourceLimit
-		Volumes []string
-		Networks []string
+	HomeHost     string
+	RepoConfig   string
+	PipeLine     struct {
+		Limits     models.ResourceLimit
+		Volumes    []string
+		Networks   []string
 		Privileged []string
 	}
 }
 
 type Server struct {
-	Listen   string
-	Manager  *manager.DefaultManager
-	Config   Config
+	Listen  string
+	Manager *manager.DefaultManager
+	Config  Config
 }
 
 func (s *Server) Run() error {
@@ -66,8 +68,8 @@ func (s *Server) Run() error {
 	repoRouter := getRouter(router, "/v1/cicd/repos/{owner}/{name}",
 		loginRequired, scmRequired, setRepoM)
 	{
-		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
+		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
 	}
 
 	authorizeRouter := getRouter(router, "/v1/cicd/authorize",
@@ -95,9 +97,8 @@ func (s *Server) Run() error {
 	//tokenAuthRedirectRouter.UseHandler(authorizeRouter)
 	//globalMux.Handle("/v1/cicd/authorize/", tokenAuthRedirectRouter)
 
-
 	ss := http.Server{
-		Addr: s.Listen,
+		Addr:    s.Listen,
 		Handler: context.ClearHandler(boxlinker.Cors.Handler(router)),
 	}
 
@@ -112,7 +113,6 @@ func getRouter(pRouter *mux.Router, path string, middlewares ...negroni.Handler)
 	pRouter.PathPrefix(path).Handler(r)
 	return subRouter
 }
-
 
 func (a *Server) getCtxUserID(r *http.Request) string {
 	us := r.Context().Value("user")

@@ -1,11 +1,12 @@
 package datastore
 
 import (
+	"fmt"
+
 	"github.com/BoxLinker/cicd/models"
 	"github.com/BoxLinker/cicd/store/datastore/sql"
-	"github.com/russross/meddler"
 	"github.com/Sirupsen/logrus"
-	"fmt"
+	"github.com/russross/meddler"
 )
 
 const repoTable = "repos"
@@ -16,7 +17,7 @@ func (db *datastore) GetRepo(id int64) (*models.Repo, error) {
 	return repo, err
 }
 
-func (db *datastore) RepoList(u *models.User) ([]*models.Repo) {
+func (db *datastore) RepoList(u *models.User) []*models.Repo {
 	stmt := sql.Lookup(db.driver, SQLQueryReposByUserID)
 	data := make([]*models.Repo, 0)
 	if err := meddler.QueryAll(db, &data, stmt, u.ID); err != nil {
@@ -67,7 +68,9 @@ func (db *datastore) RepoBatch(user *models.User, repos []*models.Repo) error {
 func (db *datastore) GetRepoOwnerName(owner, repoName string) (*models.Repo, error) {
 	stmt := sql.Lookup(db.driver, SQLRepoFindFullName)
 	var repo = new(models.Repo)
-	var err = meddler.QueryRow(db, repo, rebind(stmt), fmt.Sprintf("%s/%s", owner, repoName))
+	fullName := fmt.Sprintf("%s/%s", owner, repoName)
+	logrus.Debugf("sql:> %s \n\tparams:> %s", rebind(stmt), fullName)
+	var err = meddler.QueryRow(db, repo, rebind(stmt), fullName)
 	if err != nil {
 		logrus.Errorf("[DataStore] GetRepoOwnerName error: %s", err)
 	}
