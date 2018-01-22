@@ -1,21 +1,22 @@
 package github
 
 import (
-	"net/url"
-	"net"
-	"strings"
-	"net/http"
-	"github.com/BoxLinker/cicd/models"
-	"golang.org/x/oauth2"
-	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/cabernety/gopkg/httplib"
-	"golang.org/x/net/context"
 	"crypto/tls"
-	"github.com/google/go-github/github"
-	"github.com/BoxLinker/cicd/scm"
+	"fmt"
+	"net"
+	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
+
+	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/scm"
+	"github.com/Sirupsen/logrus"
+	"github.com/cabernety/gopkg/httplib"
+	"github.com/google/go-github/github"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 
 // Opts defines configuration options.
 type Opts struct {
-	HomeHost 	string
+	HomeHost    string
 	URL         string   // GitHub server url.
 	Context     string   // Context to display in status check
 	Client      string   // GitHub oauth client id.
@@ -48,7 +49,7 @@ func New(opts Opts) (scm.SCM, error) {
 		url_.Host = host
 	}
 	cb := &client{
-		HomeHost: 	 opts.HomeHost,
+		HomeHost:    opts.HomeHost,
 		API:         defaultAPI,
 		URL:         defaultURL,
 		Context:     opts.Context,
@@ -70,14 +71,13 @@ func New(opts Opts) (scm.SCM, error) {
 
 	logrus.Debugf("client: (%+v)", cb)
 
-
 	// Hack to enable oauth2 access in older GHE
 	//oauth2.RegisterBrokenAuthHeaderProvider(cb.URL)
 	return cb, nil
 }
 
 type client struct {
-	HomeHost 	string
+	HomeHost    string
 	URL         string
 	Context     string
 	API         string
@@ -114,10 +114,10 @@ func repoStatus(client *github.Client, r *models.Repo, b *models.Build, link, ct
 	}
 
 	data := github.RepoStatus{
-		Context: 		github.String(context),
-		State: 			github.String(convertStatus(b.Status)),
-		Description: 	github.String(convertDesc(b.Status)),
-		TargetURL: 		github.String(link),
+		Context:     github.String(context),
+		State:       github.String(convertStatus(b.Status)),
+		Description: github.String(convertDesc(b.Status)),
+		TargetURL:   github.String(link),
 	}
 	logrus.Debugf("SCM github CreateStatus owner(%s) repo(%s) commit(%s) data(%+v)", r.Owner, r.Name, b.Commit, &data)
 	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, b.Commit, &data)
@@ -134,9 +134,9 @@ func deploymentStatus(client *github.Client, r *models.Repo, b *models.Build, li
 	id, _ := strconv.Atoi(matches[1])
 
 	data := github.DeploymentStatusRequest{
-		State: 		github.String(convertStatus(b.Status)),
+		State:       github.String(convertStatus(b.Status)),
 		Description: github.String(convertDesc(b.Status)),
-		TargetURL: 	github.String(link),
+		TargetURL:   github.String(link),
 	}
 
 	_, _, err := client.Repositories.CreateDeploymentStatus(r.Owner, r.Name, id, &data)
@@ -188,11 +188,11 @@ func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.User, error) {
 
 	oauth2Config := &oauth2.Config{
-		ClientID: c.Client,
+		ClientID:     c.Client,
 		ClientSecret: c.Secret,
-		Scopes: c.Scopes,
+		Scopes:       c.Scopes,
 		Endpoint: oauth2.Endpoint{
-			AuthURL: fmt.Sprintf("%s/login/oauth/authorize", c.URL),
+			AuthURL:  fmt.Sprintf("%s/login/oauth/authorize", c.URL),
 			TokenURL: fmt.Sprintf("%s/login/oauth/access_token", c.URL),
 		},
 		RedirectURL: fmt.Sprintf("%s://%s/v1/cicd/authorize/github", httplib.GetScheme(r), httplib.GetHost(r)),
@@ -200,7 +200,7 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 
 	if err := r.FormValue("error"); err != "" {
 		return nil, &scm.AuthError{
-			Err: err,
+			Err:         err,
 			Description: r.FormValue("error_description"),
 			URI:         r.FormValue("error_uri"),
 		}
@@ -225,11 +225,11 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 		return nil, err
 	}
 	return &models.User{
-		Login: *user.Login,
-		Email: *user.Email,
-		Token: state,
+		Login:       *user.Login,
+		Email:       *user.Email,
+		Token:       state,
 		AccessToken: token.AccessToken,
-		SCM: "github",
+		SCM:         "github",
 	}, nil
 }
 
@@ -282,7 +282,7 @@ func (c *client) Activate(u *models.User, r *models.Repo, link string) error {
 			"deployment",
 		},
 		Config: map[string]interface{}{
-			"url": 		link,
+			"url":          link,
 			"content_type": "form",
 		},
 	}
