@@ -1,15 +1,16 @@
 package docker
 
 import (
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/api/types"
-	"github.com/BoxLinker/cicd/pipeline/backend"
-	"io"
 	"context"
-	"github.com/docker/docker/api/types/volume"
+	"io"
 	"io/ioutil"
+
+	"github.com/BoxLinker/cicd/pipeline/backend"
+	"github.com/Sirupsen/logrus"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/volume"
+	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/rs/zerolog/log"
 )
@@ -35,8 +36,8 @@ func NewEnv() (backend.Engine, error) {
 func (e *engine) Setup(conf *backend.Config) error {
 	for _, vol := range conf.Volumes {
 		_, err := e.client.VolumeCreate(noContext, volume.VolumesCreateBody{
-			Name: 	vol.Name,
-			Driver: vol.Driver,
+			Name:       vol.Name,
+			Driver:     vol.Driver,
 			DriverOpts: vol.DriverOpts,
 		})
 		if err != nil {
@@ -45,7 +46,7 @@ func (e *engine) Setup(conf *backend.Config) error {
 	}
 	for _, network := range conf.Networks {
 		_, err := e.client.NetworkCreate(noContext, network.Name, types.NetworkCreate{
-			Driver: network.Driver,
+			Driver:  network.Driver,
 			Options: network.DriverOpts,
 		})
 		if err != nil {
@@ -76,6 +77,7 @@ func (e *engine) Exec(proc *backend.Step) error {
 
 		// fix for drone/drone#1917
 		if perr != nil && proc.AuthConfig.Password != "" {
+			logrus.Errorf("docker exec error: image pull(%v)", perr)
 			return perr
 		}
 	}
@@ -114,21 +116,24 @@ func (e *engine) Kill(proc *backend.Step) error {
 }
 
 func (e *engine) Wait(proc *backend.Step) (*backend.State, error) {
-	wait, err := e.client.ContainerWait(noContext, proc.Name, container.WaitConditionNextExit)
+	wait, err := e.client.ContainerWait(noContext, proc.Name)
 	if err != nil {
-		// todo
+		log.Error().Msgf("=> ContainerWait error: %s", err)
+		return nil, err
 	}
-DONE:
-	for {
-		select {
-		case werr := <-err:
-			log.Error().Msgf("=> ContainerWait error: %s", werr)
-			return nil, werr
-		case body := <-wait:
-			log.Debug().Msgf("==> ContainerWait result (%+v)", body)
-			break DONE
-		}
-	}
+	log.Debug().Msgf("==> ContainerWait result (%d)", wait)
+
+	// DONE:
+	// 	for {
+	// 		select {
+	// 		case werr := <-err:
+	// 			log.Error().Msgf("=> ContainerWait error: %s", werr)
+	// 			return nil, werr
+	// 		case body := <-wait:
+	// 			log.Debug().Msgf("==> ContainerWait result (%+v)", body)
+	// 			break DONE
+	// 		}
+	// 	}
 
 	info, ierr := e.client.ContainerInspect(noContext, proc.Name)
 	if ierr != nil {
@@ -140,8 +145,8 @@ DONE:
 	}
 
 	return &backend.State{
-		Exited: true,
-		ExitCode: info.State.ExitCode,
+		Exited:    true,
+		ExitCode:  info.State.ExitCode,
 		OOMKilled: info.State.OOMKilled,
 	}, nil
 }
@@ -153,7 +158,7 @@ func (e *engine) Tail(proc *backend.Step) (io.ReadCloser, error) {
 	}
 	rc, wc := io.Pipe()
 
-	go func(){
+	go func() {
 		stdcopy.StdCopy(wc, wc, logs)
 		logs.Close()
 		wc.Close()

@@ -1,0 +1,28 @@
+server:
+  addr: ":8080"
+  debug: true
+inCluster: true
+#db:
+#  host: "mysql"
+#  port: 3306
+#  user: "root"
+#  password: "123456"
+#  name: "boxlinker"
+db:
+  host: "boxlinker.com"
+  port: 13306
+  user: "boxlinker"
+  name: "boxlinker"
+  password: "FB07ObC7xeTu"
+auth:
+  tokenAuthUrl: "https://api.boxlinker.com/v1/user/account/authToken"
+  basicAuthUrl: "https://api.boxlinker.com/v1/user/auth/basicAuth"
+podConfigure:
+- memory: "64Mi"
+  cpu: "200"
+- memory: "128Mi"
+  cpu: "400"
+- memory: "256Mi"
+  cpu: "800"
+- memory: "512Mi"
+  cpu: "1000"

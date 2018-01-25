@@ -44,14 +44,6 @@ func ReadRequestBody(r *http.Request, bean interface{}) error {
 	return nil
 }
 
-func GetQueryParam(r *http.Request, name string) string {
-	valArr := r.URL.Query()[name]
-	if len(valArr) == 1 {
-		return valArr[0]
-	}
-	return ""
-}
-
 var Cors = cors.New(cors.Options{
 	AllowedOrigins: []string{"*"},
 	AllowedMethods: []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"},

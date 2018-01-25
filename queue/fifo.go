@@ -1,48 +1,49 @@
 package queue
 
 import (
-	"sync"
-	"time"
 	"container/list"
 	"context"
-	"runtime"
 	"log"
+	"runtime"
+	"sync"
+	"time"
+
 	"github.com/Sirupsen/logrus"
 )
 
 type entry struct {
-	item 	*Task
-	done 	chan bool
-	retry 	int
-	error 	error
-	deadline	time.Time
+	item     *Task
+	done     chan bool
+	retry    int
+	error    error
+	deadline time.Time
 }
 
 type worker struct {
-	filter Filter
+	filter  Filter
 	channel chan *Task
 }
 
 type fifo struct {
 	sync.Mutex
 
-	workers map[*worker]struct{}
-	running map[string]*entry
-	pending *list.List
+	workers   map[*worker]struct{}
+	running   map[string]*entry
+	pending   *list.List
 	extension time.Duration
 }
 
 func New() Queue {
 	return &fifo{
-		workers: map[*worker]struct{}{},
-		running: map[string]*entry{},
-		pending: list.New(),
+		workers:   map[*worker]struct{}{},
+		running:   map[string]*entry{},
+		pending:   list.New(),
 		extension: time.Minute * 10,
 	}
 }
 
 func (q *fifo) Push(c context.Context, task *Task) error {
-	logrus.Debugf("fifo push (%+v)", task)
+	logrus.Debugf("fifo push (%s)", string(task.Data))
 	q.Lock()
 	q.pending.PushBack(task)
 	q.Unlock()
@@ -55,7 +56,7 @@ func (q *fifo) Poll(c context.Context, f Filter) (*Task, error) {
 	q.Lock()
 	w := &worker{
 		channel: make(chan *Task, 1),
-		filter: f,
+		filter:  f,
 	}
 	q.workers[w] = struct{}{}
 	q.Unlock()
@@ -119,7 +120,6 @@ func (q *fifo) Wait(c context.Context, id string) error {
 	}
 	return nil
 }
-
 
 // Extend extends the task execution deadline.
 func (q *fifo) Extend(c context.Context, id string) error {
@@ -187,8 +187,8 @@ loop:
 				q.pending.Remove(e)
 
 				q.running[item.ID] = &entry{
-					item: item,
-					done: make(chan bool),
+					item:     item,
+					done:     make(chan bool),
 					deadline: time.Now().Add(q.extension),
 				}
 

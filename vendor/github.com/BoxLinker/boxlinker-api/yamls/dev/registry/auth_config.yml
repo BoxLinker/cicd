@@ -1,0 +1,29 @@
+server:
+  addr: ":8082"
+  debug: true
+token:
+  issuer: "Local Registry Auth Service"
+  expiration: 900
+  certificate: "/ssl/ca.crt"
+  key: "/ssl/ca.key"
+db:
+  host: "mysql"
+  port: 3306
+  user: "root"
+  password: "123456"
+  name: "boxlinker"
+auth:
+#  tokenAuthUrl: "https://ucenter.boxlinker.com/api/v1.0/ucenter/tokens"
+#  basicAuthUrl: "https://ucenter.boxlinker.com/api/v1.0/ucenter/tokens"
+  tokenAuthUrl: "http://user:8080/v1/user/account/authToken"
+  basicAuthUrl: "http://user:8080/v1/user/auth/basicAuth"
+acl:
+  - match: {account: "admin"}
+    actions: ["*"]   #如果写 push 了，pull 就必须也写上
+    comment: "Admin has full access to everything."
+  - match: {account: "/.+/", name: "${account}/*"}
+    actions: ["*"]
+    comment: "Logged in users have full access to images that are in their 'namespace'"
+  - match: {account: "*",name: "library/*"}
+    actions: ["pull"]
+    comment: "Logged in users can query the catalog."

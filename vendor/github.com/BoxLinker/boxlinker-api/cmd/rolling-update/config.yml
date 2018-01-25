@@ -1,0 +1,26 @@
+server:
+  addr: ":8082"
+  debug: true
+inCluster: false
+registryHost: "registry.cn-beijing.aliyuncs.com"
+amqp:
+  uri: "amqp://guest:guest@localhost:5672/"
+  exchange: "registry-watcher"
+  exchangeType: "fanout"
+  queueName: "registry-watcher"
+  bindingKey: "registry-watcher-key"
+#db:
+# host: "mysql"
+# port: 3306
+# user: "root"
+# password: "123456"
+# name: "boxlinker"
+db:
+  host: "boxlinker.com"
+  port: 13306
+  user: "boxlinker"
+  name: "boxlinker"
+  password: "FB07ObC7xeTu"
+auth:
+  tokenAuthUrl: "https://api.boxlinker.com/v1/user/account/authToken"
+  basicAuthUrl: "https://api.boxlinker.com/v1/user/auth/basicAuth"

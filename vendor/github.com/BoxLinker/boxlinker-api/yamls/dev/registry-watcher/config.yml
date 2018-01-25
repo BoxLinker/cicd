@@ -1,0 +1,66 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: registry-watcher
+  namespace: boxlinker
+spec:
+  rules:
+  - host: api.boxlinker.com
+    http:
+      paths:
+      - path: "/v1/registry-watcher"
+        backend:
+          serviceName: registry-watcher
+          servicePort: 8080
+  tls:
+  - hosts:
+    - api.boxlinker.com
+    secretName: lb-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-watcher
+  namespace: boxlinker
+  labels:
+    app: "registry-watcher"
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: "registry-watcher"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: registry-watcher
+  namespace: boxlinker
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "registry-watcher"
+    spec:
+      nodeSelector:
+        role: system
+      imagePullSecrets:
+      - name: registry-key
+      containers:
+      - name: registry-watcher
+        imagePullPolicy: Always
+        image: index.boxlinker.com/boxlinker/registry-watcher:v1.0
+        args:
+        - "/app/registry-watcher"
+        env:
+        - name: CONFIG_FILE
+          value: /app/config/env.yml
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config
+          mountPath: /app/config/
+      volumes:
+      - name: config
+        secret:
+          secretName: "env-registry-watcher"

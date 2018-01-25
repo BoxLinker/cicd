@@ -1,0 +1,11 @@
+server:
+  addr: ":8080"
+  debug: true
+auth:
+  registryAuthorization: "just4fun"
+amqp:
+  host: "amqp://guest:guest@localhost:5672/"
+  exchange: "registry-watcher"
+  exchangeType: "fanout"
+  routingKey: "registry-watcher-key"
+  reliable: true

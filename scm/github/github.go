@@ -6,8 +6,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/BoxLinker/cicd/models"
@@ -20,8 +18,8 @@ import (
 )
 
 const (
-	defaultURL = "https://github.com"     // Default GitHub URL
-	defaultAPI = "https://api.github.com" // Default GitHub API URL
+	defaultURL = "https://github.com"      // Default GitHub URL
+	defaultAPI = "https://api.github.com/" // Default GitHub API URL
 )
 
 // Opts defines configuration options.
@@ -95,53 +93,53 @@ type client struct {
 func (c *client) Status(u *models.User, r *models.Repo, b *models.Build, link string) error {
 	client := c.newClientToken(u.AccessToken)
 	switch b.Event {
-	case "deployment":
-		return deploymentStatus(client, r, b, link)
+	// case "deployment":
+	// 	return deploymentStatus(client, r, b, link)
 	default:
 		return repoStatus(client, r, b, link, c.Context)
 	}
 }
 
 func repoStatus(client *github.Client, r *models.Repo, b *models.Build, link, ctx string) error {
-	context := ctx
+	cCtx := ctx
 	switch b.Event {
 	case models.EventPull:
-		context += "/pr"
+		cCtx += "/pr"
 	default:
 		if len(b.Event) > 0 {
-			context += "/" + b.Event
+			cCtx += "/" + b.Event
 		}
 	}
 
 	data := github.RepoStatus{
-		Context:     github.String(context),
+		Context:     github.String(cCtx),
 		State:       github.String(convertStatus(b.Status)),
 		Description: github.String(convertDesc(b.Status)),
 		TargetURL:   github.String(link),
 	}
 	logrus.Debugf("SCM github CreateStatus owner(%s) repo(%s) commit(%s) data(%+v)", r.Owner, r.Name, b.Commit, &data)
-	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, b.Commit, &data)
+	_, _, err := client.Repositories.CreateStatus(context.Background(), r.Owner, r.Name, b.Commit, &data)
 	return err
 }
 
-var reDeploy = regexp.MustCompile(".+/deployments/(\\d+)")
+// var reDeploy = regexp.MustCompile(".+/deployments/(\\d+)")
 
-func deploymentStatus(client *github.Client, r *models.Repo, b *models.Build, link string) error {
-	matches := reDeploy.FindStringSubmatch(b.Link)
-	if len(matches) != 2 {
-		return nil
-	}
-	id, _ := strconv.Atoi(matches[1])
+// func deploymentStatus(client *github.Client, r *models.Repo, b *models.Build, link string) error {
+// 	matches := reDeploy.FindStringSubmatch(b.Link)
+// 	if len(matches) != 2 {
+// 		return nil
+// 	}
+// 	id, _ := strconv.Atoi(matches[1])
 
-	data := github.DeploymentStatusRequest{
-		State:       github.String(convertStatus(b.Status)),
-		Description: github.String(convertDesc(b.Status)),
-		TargetURL:   github.String(link),
-	}
+// 	data := github.DeploymentStatusRequest{
+// 		State:       github.String(convertStatus(b.Status)),
+// 		Description: github.String(convertDesc(b.Status)),
+// 		TargetURL:   github.String(link),
+// 	}
 
-	_, _, err := client.Repositories.CreateDeploymentStatus(r.Owner, r.Name, id, &data)
-	return err
-}
+// 	_, _, err := client.Repositories.CreateDeploymentStatus(context.Background(), r.Owner, r.Name, id, &data)
+// 	return err
+// }
 
 func (c *client) File(u *models.User, r *models.Repo, b *models.Build, f string) ([]byte, error) {
 	return c.FileRef(u, r, b.Commit, f)
@@ -151,16 +149,18 @@ func (c *client) FileRef(u *models.User, r *models.Repo, ref, f string) ([]byte,
 	client := c.newClientToken(u.AccessToken)
 	opts := new(github.RepositoryContentGetOptions)
 	opts.Ref = ref
-	data, _, _, err := client.Repositories.GetContents(r.Owner, r.Name, f, opts)
+	logrus.Debugf("FileRef: %s, %s, %s, %+v", r.Owner, r.Name, f, opts)
+	data, _, _, err := client.Repositories.GetContents(context.Background(), r.Owner, r.Name, f, opts)
 	if err != nil {
 		return nil, err
 	}
-	return data.Decode()
+	dataS, err := data.GetContent()
+	return []byte(dataS), err
 }
 
 func (c *client) Repo(u *models.User, owner, repoName string) (*models.Repo, error) {
 	client := c.newClientToken(u.AccessToken)
-	repo, _, err := client.Repositories.Get(owner, repoName)
+	repo, _, err := client.Repositories.Get(context.Background(), owner, repoName)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 
 	var repos []*models.Repo
 	if opts.Page > 0 {
-		list, resp, err := client.Repositories.List("", opts)
+		list, resp, err := client.Repositories.List(context.Background(), "", opts)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +220,7 @@ func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam st
 	}
 
 	client := c.newClientToken(token.AccessToken)
-	user, _, err := client.Users.Get("")
+	user, _, err := client.Users.Get(context.Background(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +271,7 @@ func (c *client) Hook(r *http.Request) (*models.Repo, *models.Build, error) {
 
 func (c *client) Activate(u *models.User, r *models.Repo, link string) error {
 	if err := c.Deactivate(u, r, link); err != nil {
+		logrus.Errorf("deactive repo(%s) err: %v", r.Name, err)
 		return err
 	}
 	client := c.newClientToken(u.AccessToken)
@@ -286,13 +287,16 @@ func (c *client) Activate(u *models.User, r *models.Repo, link string) error {
 			"content_type": "form",
 		},
 	}
-	_, _, err := client.Repositories.CreateHook(r.Owner, r.Name, hook)
+	_, _, err := client.Repositories.CreateHook(context.Background(), r.Owner, r.Name, hook)
+	if err != nil {
+		logrus.Errorf("active repo(%s) err: %v", r.Name, err)
+	}
 	return err
 }
 
 func (c *client) Deactivate(u *models.User, r *models.Repo, link string) error {
 	client := c.newClientToken(u.AccessToken)
-	hooks, _, err := client.Repositories.ListHooks(r.Owner, r.Name, nil)
+	hooks, _, err := client.Repositories.ListHooks(context.Background(), r.Owner, r.Name, nil)
 	if err != nil {
 		return err
 	}
@@ -300,11 +304,11 @@ func (c *client) Deactivate(u *models.User, r *models.Repo, link string) error {
 	if match == nil {
 		return nil
 	}
-	_, err = client.Repositories.DeleteHook(r.Owner, r.Name, *match.ID)
+	_, err = client.Repositories.DeleteHook(context.Background(), r.Owner, r.Name, *match.ID)
 	return err
 }
 
-func matchHooks(hooks []github.Hook, rawurl string) *github.Hook {
+func matchHooks(hooks []*github.Hook, rawurl string) *github.Hook {
 	link, err := url.Parse(rawurl)
 	if err != nil {
 		return nil
@@ -323,7 +327,7 @@ func matchHooks(hooks []github.Hook, rawurl string) *github.Hook {
 		}
 		hookurl, err := url.Parse(s)
 		if err == nil && hookurl.Host == link.Host {
-			return &hook
+			return hook
 		}
 	}
 	return nil

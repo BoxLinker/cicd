@@ -1,0 +1,60 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: registry
+  namespace: boxlinker
+spec:
+  rules:
+  - host: api.boxlinker.com
+    http:
+      paths:
+      - path: /v1/registry
+        backend:
+          serviceName: email
+          servicePort: 8080
+  tls:
+  - hosts:
+    - api.boxlinker.com
+    secretName: lb-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  namespace: boxlinker
+  labels:
+    app: "registry"
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: "registry"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: boxlinker
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "registry"
+    spec:
+      imagePullSecrets:
+      - name: registry-key
+      nodeSelector:
+        role: system
+      containers:
+      - name: email
+        image: registry.cn-beijing.aliyuncs.com/cabernety/registry-server:v1.0
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config-yaml
+          mountPath: /
+      volumes:
+      - name: config-yaml
+        secret:
+          secretName: "registry-server-config"

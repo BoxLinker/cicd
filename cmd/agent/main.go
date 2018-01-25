@@ -1,14 +1,16 @@
 package main
 
 import (
-	"github.com/urfave/cli"
-	"github.com/BoxLinker/cicd/version"
-	_ "github.com/joho/godotenv/autoload"
-	"os"
 	"fmt"
+	"os"
+
+	"github.com/BoxLinker/cicd/version"
+	"github.com/Sirupsen/logrus"
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/urfave/cli"
 )
 
-func main(){
+func main() {
 	app := cli.NewApp()
 	app.Name = "drone-agent"
 	app.Version = version.Version.String()
@@ -21,8 +23,8 @@ func main(){
 		},
 		cli.StringFlag{
 			EnvVar: "SERVER",
-			Name: 	"server",
-			Value: 	"localhost:9000",
+			Name:   "server",
+			Value:  "localhost:9000",
 		},
 		cli.StringFlag{
 			EnvVar: "USERNAME",
@@ -42,14 +44,21 @@ func main(){
 		},
 		cli.StringFlag{
 			EnvVar: "PLATFORM",
-			Name: "platform",
-			Value: "linux/amd64",
+			Name:   "platform",
+			Value:  "linux/amd64",
 		},
 	}
 	app.Action = loop
+	app.Before = func(c *cli.Context) error {
+		if c.Bool("debug") {
+			logrus.SetLevel(logrus.DebugLevel)
+		} else {
+			logrus.SetLevel(logrus.InfoLevel)
+		}
+		return nil
+	}
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
-

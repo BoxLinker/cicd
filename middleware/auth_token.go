@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"net/http"
+
 	"github.com/BoxLinker/boxlinker-api"
-	"golang.org/x/net/context"
-	"github.com/Sirupsen/logrus"
 	"github.com/BoxLinker/cicd/auth"
+	"github.com/Sirupsen/logrus"
+	"github.com/cabernety/gopkg/httplib"
 	"github.com/codegangsta/negroni"
+	"golang.org/x/net/context"
 )
 
 type AuthAPITokenRequired struct {
@@ -19,8 +21,11 @@ func NewAuthAPITokenRequired(url string) negroni.Handler {
 	}
 }
 
-func (a *AuthAPITokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc){
+func (a *AuthAPITokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	token := r.Header.Get("X-Access-Token")
+	if token == "" {
+		token = httplib.GetQueryParam(r, "access_token")
+	}
 	logrus.Debugf("request token (%s)", token)
 	if token == "" {
 		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
@@ -29,7 +34,7 @@ func (a *AuthAPITokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request,
 	logrus.Debugf("AuthToken url: %s", a.authUrl)
 	result, err := auth.TokenAuth(a.authUrl, token)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR,nil, err.Error())
+		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 		return
 	}
 	if result.Status == boxlinker.STATUS_OK && next != nil {
@@ -40,4 +45,3 @@ func (a *AuthAPITokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request,
 		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
 	}
 }
-

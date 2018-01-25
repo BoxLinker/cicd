@@ -509,7 +509,6 @@ func GetHost(r *http.Request) string {
 	}
 }
 
-
 // GetURL is a helper function that evaluates the http.Request
 // and returns the URL as a string. Only the scheme + hostname
 // are included; the path is excluded.

@@ -16,8 +16,8 @@ import (
 )
 
 func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
-	flush, _ := strconv.ParseBool(boxlinker.GetQueryParam(r, "flush"))
-	pc := boxlinker.ParsePageConfig(r)
+	flush, _ := strconv.ParseBool(httplib.GetQueryParam(r, "flush"))
+	pc := httplib.ParsePageConfig(r)
 	u := s.getUserInfo(r)
 	logrus.Debugf("GetRepos (%s)", u.SCM)
 
@@ -37,7 +37,7 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
-	scmType := boxlinker.GetQueryParam(r, "scm")
+	scmType := httplib.GetQueryParam(r, "scm")
 	if scmType == "" || !models.SCMExists(scmType) {
 		http.Error(w, "wrong scm type", http.StatusBadRequest)
 		return
@@ -94,9 +94,9 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link := fmt.Sprintf(
-		"%s/v1/cicd/hook/{%s}?access_token=%s",
-		repo.SCM,
+		"%s/v1/cicd/hook/%s?access_token=%s",
 		httplib.GetURL(r),
+		repo.SCM,
 		sig,
 	)
 

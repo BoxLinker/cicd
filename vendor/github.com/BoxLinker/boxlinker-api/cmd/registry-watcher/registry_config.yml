@@ -1,0 +1,26 @@
+version: 0.1
+log:
+  level: debug
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+    maxthreads: 100
+http:
+  addr: :5000
+  net: tcp
+  secret: asecretforlocaldevelopment
+  debug:
+    addr: :5001
+notifications:
+  endpoints:
+    - name: alistener
+      disabled: false
+      url: http://10.1.32.222:8080/v1/registryWatcher/event
+      headers:
+        Authorization:
+        - just4fun
+      timeout: 500ms
+      threshold: 5
+      backoff: 3s
+      ignoredmediatypes:
+        - application/octet-stream

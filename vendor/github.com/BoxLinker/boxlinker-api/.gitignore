@@ -1,0 +1,16 @@
+.idea
+node_modules
+.DS_Store
+docs/docs
+npm-debug.log
+*.pyc
+db_data
+ceph_data
+cmd/email/email
+cmd/user/user
+cmd/registry/image-api
+cmd/application/application
+cmd/registry-watcher/registry-watcher
+cmd/rolling-update/rolling-update
+vendor
+dev/registry_data

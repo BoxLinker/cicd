@@ -1,0 +1,44 @@
+version: '2'
+services:
+  nginx:
+    image: nginx
+    ports:
+    - 8081:80
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    links:
+    - image:image
+    - user:user
+  image:
+    build:
+      context: ../
+      dockerfile: Dockerfile.registry
+    image: registry.cn-beijing.aliyuncs.com/cabernety/registry-server:v1.0
+    volumes:
+    - ../cmd/registry/auth_config.yml:/app/config/auth_config.yml
+    links:
+    - mysql:mysql
+  user:
+    build:
+      context: ../
+      dockerfile: Dockerfile.user
+    image: registry.cn-beijing.aliyuncs.com/cabernety/user-server:v1.0
+    environment:
+    - DB_HOST=mysql
+    links:
+    - mysql:mysql
+  mysql:
+    image: mysql
+    volumes:
+    - ../db_data:/var/lib/mysql
+    ports:
+    - 3306:3306
+    environment:
+    - MYSQL_DATABASE=boxlinker
+    - MYSQL_ROOT_PASSWORD=123456
+  registry:
+    image: registry:2
+    volumes:
+    - ./registry_data:/var/lib/registry
+    - ./registry/config.yml:/etc/docker/registry/config.yml
+

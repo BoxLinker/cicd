@@ -16,7 +16,7 @@ IMAGE_USER=user-server
 IMAGE_USER_TAG=v1.0
 
 IMAGE_APP=application-server
-IMAGE_APP_TAG=${shell git describe --tags --long}
+IMAGE_APP_TAG=v1.0.${shell date +%Y%m%d%H%m%S}
 
 IMAGE_ROLL=rolling-update
 IMAGE_ROLL_TAG=v1.0
@@ -61,13 +61,13 @@ user: push-user
 
 build-application:
 	cd cmd/application && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o application
-	docker build -t ${IMAGE_PREFIX}/${IMAGE_APP}:${IMAGE_APP_TAG} -f Dockerfile.application .
+	docker build -t ${IMAGE_ALIYUN_PREFIX}/${IMAGE_APP}:${IMAGE_APP_TAG} -f Dockerfile.application .
 
 application: build-application
-	docker push ${IMAGE_PREFIX}/${IMAGE_APP}:${IMAGE_APP_TAG}
+	docker push ${IMAGE_ALIYUN_PREFIX}/${IMAGE_APP}:${IMAGE_APP_TAG}
 
 build-rolling-update:
-	cd cmd/rolling-update && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o rolling-update
+	cd cmd/application && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w' -o rolling-update
 	docker build -t ${IMAGE_PREFIX}/${IMAGE_ROLL}:${IMAGE_ROLL_TAG} -f Dockerfile.rolling-update .
 
 rolling-update: build-rolling-update

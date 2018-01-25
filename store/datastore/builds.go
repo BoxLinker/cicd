@@ -1,12 +1,13 @@
 package datastore
 
 import (
-	"github.com/BoxLinker/cicd/models"
 	"fmt"
-	"github.com/BoxLinker/cicd/store/datastore/sql"
 	"time"
-	"github.com/russross/meddler"
+
+	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/store/datastore/sql"
 	"github.com/Sirupsen/logrus"
+	"github.com/russross/meddler"
 )
 
 func (db *datastore) GetBuild(id int64) (*models.Build, error) {
@@ -17,14 +18,16 @@ func (db *datastore) GetBuild(id int64) (*models.Build, error) {
 
 func (db *datastore) GetBuildNumber(repo *models.Repo, num int) (*models.Build, error) {
 	var build = new(models.Build)
-	var err = meddler.QueryRow(db, build, rebind(buildNumberQuery), repo.ID, num)
+	sql := rebind(buildNumberQuery)
+	logrus.Debugf("sql:GetBuildNumber:> %s, %d, %d", sql, repo.ID, num)
+	var err = meddler.QueryRow(db, build, sql, repo.ID, num)
 	if err != nil {
 		logrus.Errorf("[DataStore:GetBuildNumber] error: %s", err)
 	}
 	return build, err
 }
 
-func (db *datastore) GetBuildLastBefore(repo *models.Repo, branch string, num int64)(*models.Build, error) {
+func (db *datastore) GetBuildLastBefore(repo *models.Repo, branch string, num int64) (*models.Build, error) {
 	var build = new(models.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildLastBeforeQuery), repo.ID, branch, num)
 	if err != nil {

@@ -1,10 +1,11 @@
 package github
 
 import (
-	"github.com/google/go-github/github"
-	"github.com/BoxLinker/cicd/models"
-	"strings"
 	"fmt"
+	"strings"
+
+	"github.com/BoxLinker/cicd/models"
+	"github.com/google/go-github/github"
 )
 
 const defaultBranch = "master"
@@ -25,33 +26,32 @@ const (
 	descError    = "oops, something went wrong"
 )
 
-
 const (
 	headRefs  = "refs/pull/%d/head"  // pull request unmerged
 	mergeRefs = "refs/pull/%d/merge" // pull request merged with base
 	refspec   = "%s:%s"
 )
 
-func convertRepoList(from []github.Repository, u *models.User) []*models.Repo {
+func convertRepoList(from []*github.Repository, u *models.User) []*models.Repo {
 	var repos []*models.Repo
 	for _, repo := range from {
-		repos = append(repos, convertRepo(&repo, u))
+		repos = append(repos, convertRepo(repo, u))
 	}
 	return repos
 }
 
 func convertRepo(form *github.Repository, u *models.User) *models.Repo {
 	repo := &models.Repo{
-		Owner: 		*form.Owner.Login,
-		Name: 		*form.Name,
-		FullName: 	*form.FullName,
-		Link: 		*form.HTMLURL,
-		IsPrivate: 	*form.Private,
-		Clone: 		*form.CloneURL,
-		Avatar: 	*form.Owner.AvatarURL,
-		SCM: 		models.RepoGithub,
-		Branch: 	defaultBranch,
-		UserID: 	u.ID,
+		Owner:     *form.Owner.Login,
+		Name:      *form.Name,
+		FullName:  *form.FullName,
+		Link:      *form.HTMLURL,
+		IsPrivate: *form.Private,
+		Clone:     *form.CloneURL,
+		Avatar:    *form.Owner.AvatarURL,
+		SCM:       models.RepoGithub,
+		Branch:    defaultBranch,
+		UserID:    u.ID,
 	}
 	if form.DefaultBranch != nil {
 		repo.Branch = *form.DefaultBranch
@@ -59,18 +59,17 @@ func convertRepo(form *github.Repository, u *models.User) *models.Repo {
 	return repo
 }
 
-
 // 工具方法，将 github 的 webhook 信息转换成 repo
 func convertRepoHook(from *webhook) *models.Repo {
 	repo := &models.Repo{
-		Owner: 	from.Repo.Owner.Login,
-		Name: 	from.Repo.Name,
-		FullName: 	from.Repo.FullName,
-		Link: 		from.Repo.HTMLURL,
-		IsPrivate: 	from.Repo.Private,
-		Clone: 		from.Repo.CloneURL,
-		Branch: 	from.Repo.DefaultBranch,
-		SCM: 		models.RepoGithub,
+		Owner:     from.Repo.Owner.Login,
+		Name:      from.Repo.Name,
+		FullName:  from.Repo.FullName,
+		Link:      from.Repo.HTMLURL,
+		IsPrivate: from.Repo.Private,
+		Clone:     from.Repo.CloneURL,
+		Branch:    from.Repo.DefaultBranch,
+		SCM:       models.RepoGithub,
 	}
 	if repo.Branch == "" {
 		repo.Branch = defaultBranch
@@ -83,13 +82,14 @@ func convertRepoHook(from *webhook) *models.Repo {
 	}
 	return repo
 }
+
 // 工具方法，将 github 的 webhook 信息转换成 Build
 func convertPushHook(from *webhook) *models.Build {
 	build := &models.Build{
-		Event: models.EventPush,
+		Event:   models.EventPush,
 		Commit:  from.Head.ID,
-		Ref: 	 from.Ref,
-		Link: 	 from.Head.URL,
+		Ref:     from.Ref,
+		Link:    from.Head.URL,
 		Branch:  strings.Replace(from.Ref, "refs/heads/", "", -1),
 		Message: from.Head.Message,
 		Email:   from.Head.Author.Email,
@@ -116,7 +116,7 @@ func convertPushHook(from *webhook) *models.Build {
 
 func convertDeployHook(from *webhook) *models.Build {
 	build := &models.Build{
-		Event: 	models.EventDeploy,
+		Event:   models.EventDeploy,
 		Commit:  from.Deployment.Sha,
 		Link:    from.Deployment.URL,
 		Message: from.Deployment.Desc,
@@ -167,7 +167,6 @@ func convertPullHook(from *webhook, merge bool) *models.Build {
 	}
 	return build
 }
-
 
 // convertStatus is a helper function used to convert a Drone status to a
 // GitHub commit status.

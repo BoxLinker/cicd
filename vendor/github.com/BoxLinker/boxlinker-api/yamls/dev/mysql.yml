@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: myql
+  labels:
+    app: mysql
+  namespace: boxlinker
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql-container
+        image: mysql
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "123456"
+        - name: MYSQL_DATABASE
+          value: boxlinker
+        volumeMounts:
+        - name: db
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: db
+        hostPath:
+          path: /home/docker/mysql/db_data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: boxlinker
+  labels:
+    app: mysql
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: mysql

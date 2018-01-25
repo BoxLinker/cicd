@@ -43,5 +43,6 @@ func matchHostname(image, hostname string) bool {
 	if err != nil {
 		return false
 	}
-	return reference.Domain(ref) == hostname
+	hName, _ := reference.SplitHostname(ref)
+	return hName == hostname
 }

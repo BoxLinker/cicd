@@ -1,0 +1,25 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: ./ssl/ca.crt
+    server: k8s.boxlinker.com
+  name: local
+contexts:
+- context:
+    cluster: local
+    namespace: boxlinker
+    user: kubelet
+  name: boxlinker
+- context:
+    cluster: local
+    namespace: kube-system
+    user: kubelet
+  name: kube-system
+current-context: boxlinker
+kind: Config
+preferences: {}
+users:
+- name: kubelet
+  user:
+    client-certificate: ./ssl/kubecfg.crt
+    client-key: ./ssl/kubecfg.key

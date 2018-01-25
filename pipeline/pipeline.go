@@ -1,18 +1,20 @@
 package pipeline
 
 import (
-	"github.com/BoxLinker/cicd/pipeline/backend"
 	"context"
 	"time"
-	"golang.org/x/sync/errgroup"
+
+	"github.com/BoxLinker/cicd/pipeline/backend"
 	"github.com/BoxLinker/cicd/pipeline/multipart"
+	"github.com/Sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 type (
 	// pipeline 和 process 的状态
 	State struct {
 		// pipeline 的全局状态
-		Pipeline struct{
+		Pipeline struct {
 			// pipeline 开始时间
 			Time int64 `json:"time"`
 			// pipeline 当前 step
@@ -28,14 +30,14 @@ type (
 
 // Runtime is a configuration runtime.
 type Runtime struct {
-	err 	error
-	spec 	*backend.Config
-	engine 	backend.Engine
+	err     error
+	spec    *backend.Config
+	engine  backend.Engine
 	started int64
 
-	ctx 	context.Context
-	tracer  Tracer
-	logger  Logger
+	ctx    context.Context
+	tracer Tracer
+	logger Logger
 }
 
 // New returns a new runtime using the specified runtime
@@ -58,6 +60,7 @@ func (r *Runtime) Run() error {
 
 	r.started = time.Now().Unix()
 	if err := r.engine.Setup(r.spec); err != nil {
+		logrus.Errorf("engine setup err: %v", err)
 		return err
 	}
 
@@ -123,6 +126,7 @@ func (r *Runtime) exec(proc *backend.Step) error {
 	}
 
 	if err := r.engine.Exec(proc); err != nil {
+		logrus.Errorf("engine exec err: %v", err)
 		return err
 	}
 

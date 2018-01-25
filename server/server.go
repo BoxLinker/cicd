@@ -8,6 +8,7 @@ import (
 	"github.com/BoxLinker/cicd/manager"
 	"github.com/BoxLinker/cicd/middleware"
 	"github.com/Sirupsen/logrus"
+	"github.com/cabernety/gopkg/httplib"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -72,6 +73,11 @@ func (s *Server) Run() error {
 		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
 	}
 
+	streamRouter := getRouter(router, "/v1/cicd/stream/logs/{owner}/{name}", loginRequired, setRepoM)
+	{
+		streamRouter.HandleFunc("/{build}/{number}", s.LogStream).Methods("GET")
+	}
+
 	authorizeRouter := getRouter(router, "/v1/cicd/authorize",
 		authorizeTokenM)
 	{
@@ -127,6 +133,6 @@ func (a *Server) getCtxUserID(r *http.Request) string {
 }
 
 func (a *Server) getUserInfo(r *http.Request) *models.User {
-	scm := boxlinker.GetQueryParam(r, "scm")
+	scm := httplib.GetQueryParam(r, "scm")
 	return a.Manager.GetUserByUCenterID(a.getCtxUserID(r), scm)
 }

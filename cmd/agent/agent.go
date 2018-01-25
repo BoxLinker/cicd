@@ -1,27 +1,29 @@
 package main
 
 import (
-	"github.com/urfave/cli"
-	"github.com/BoxLinker/cicd/pipeline/rpc"
-	"os"
-	"google.golang.org/grpc"
-	oldcontext "golang.org/x/net/context"
-	"github.com/tevino/abool"
-	"google.golang.org/grpc/metadata"
 	"context"
-	"github.com/BoxLinker/cicd/signal"
+	"encoding/json"
+	"io"
+	"io/ioutil"
+	"os"
+	"strconv"
 	"sync"
 	"time"
-	"github.com/BoxLinker/cicd/pipeline/backend/docker"
+
 	"github.com/BoxLinker/cicd/pipeline"
-	"github.com/BoxLinker/cicd/pipeline/multipart"
 	"github.com/BoxLinker/cicd/pipeline/backend"
-	"io"
-	"encoding/json"
-	"io/ioutil"
+	"github.com/BoxLinker/cicd/pipeline/backend/docker"
+	"github.com/BoxLinker/cicd/pipeline/multipart"
+	"github.com/BoxLinker/cicd/pipeline/rpc"
+	"github.com/BoxLinker/cicd/signal"
+	"github.com/Sirupsen/logrus"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"strconv"
+	"github.com/tevino/abool"
+	"github.com/urfave/cli"
+	oldcontext "golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func loop(c *cli.Context) error {
@@ -42,7 +44,6 @@ func loop(c *cli.Context) error {
 	} else {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	}
-
 
 	conn, err := grpc.Dial(
 		c.String("server"),
@@ -69,7 +70,7 @@ func loop(c *cli.Context) error {
 		context.Background(),
 		metadata.Pairs("hostname", hostname),
 	)
-	ctx = signal.WithContextFunc(ctx, func(){
+	ctx = signal.WithContextFunc(ctx, func() {
 		println("ctrl+c received, terminating process")
 		sigterm.Set()
 	})
@@ -79,9 +80,9 @@ func loop(c *cli.Context) error {
 	wg.Add(parallel)
 
 	for i := 0; i < parallel; i++ {
-		go func(index int){
+		go func(index int) {
 			log.Info().Msgf("Ready to start runner %d .", index)
-			defer func(){
+			defer func() {
 				wg.Done()
 				log.Info().Msgf("runner %d exit.", index)
 			}()
@@ -90,9 +91,9 @@ func loop(c *cli.Context) error {
 					return
 				}
 				r := runner{
-					index: index,
-					client: client,
-					filter: filter,
+					index:    index,
+					client:   client,
+					filter:   filter,
 					hostname: hostname,
 				}
 				if err := r.run(ctx); err != nil {
@@ -116,7 +117,7 @@ const (
 )
 
 type runner struct {
-	index int
+	index    int
 	client   rpc.Peer
 	filter   rpc.Filter
 	hostname string
@@ -154,13 +155,15 @@ func (r *runner) run(ctx context.Context) error {
 	engine, err := docker.NewEnv()
 	if err != nil {
 		logger.Error().Err(err).Msg("cannot create docker client")
+	} else {
+		logrus.Debugln("docker client created")
 	}
 
 	ctx, cancel := context.WithTimeout(ctxmeta, timeout)
 	defer cancel()
 
 	cancelled := abool.New()
-	go func(){
+	go func() {
 		logger.Debug().Msg("listen for cancel signal")
 
 		if werr := r.client.Wait(ctx, work.ID); werr != nil {
@@ -172,7 +175,7 @@ func (r *runner) run(ctx context.Context) error {
 		}
 	}()
 
-	go func(){
+	go func() {
 		for {
 			select {
 			case <-ctx.Done():
@@ -233,7 +236,7 @@ func (r *runner) run(ctx context.Context) error {
 
 		loglogger.Debug().Msg("log stream upload complete")
 
-		defer func(){
+		defer func() {
 			loglogger.Debug().Msg("log stream closed")
 			uploads.Done()
 		}()
@@ -346,6 +349,7 @@ func (r *runner) run(ctx context.Context) error {
 	state.Finished = time.Now().Unix()
 	state.Exited = true
 	if err != nil {
+		logrus.Errorf("pipeline run err: %v", err)
 		switch xerr := err.(type) {
 		case *pipeline.ExitError:
 			state.ExitCode = xerr.Code
@@ -387,7 +391,6 @@ func (r *runner) run(ctx context.Context) error {
 
 	return nil
 }
-
 
 type credentials struct {
 	username string
