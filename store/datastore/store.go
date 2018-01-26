@@ -2,27 +2,28 @@ package datastore
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/Sirupsen/logrus"
 	"time"
-	"github.com/russross/meddler"
-	"github.com/BoxLinker/cicd/store/datastore/ddl"
+
 	"github.com/BoxLinker/cicd/store"
+	"github.com/BoxLinker/cicd/store/datastore/ddl"
+	"github.com/Sirupsen/logrus"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/russross/meddler"
 )
 
 const (
 	TableSCMUsers = "users"
-	TableRepos = "repos"
+	TableRepos    = "repos"
 )
 
 const (
 	SQLSCMUsersFindByUCenterID = "scm_user-find-u_center_id"
-	SQLUserFindByIDSCM = "user-find-id-scm"
+	SQLUserFindByIDSCM         = "user-find-id-scm"
 
 	SQLQueryReposByUserID = "repo-find-user"
-	SQLRepoBatch = "repo-insert-ignore"
-	SQLRepoFindFullName = "repo-find-fullName"
-	SQLRepoDelID = "repo-del-id"
+	SQLRepoBatch          = "repo-insert-ignore"
+	SQLRepoFindFullName   = "repo-find-fullName"
+	SQLRepoDelID          = "repo-del-id"
 )
 
 type datastore struct {
@@ -32,12 +33,13 @@ type datastore struct {
 
 func New(driver, datasource string) store.Store {
 	return &datastore{
-		DB: open(driver, datasource),
+		DB:     open(driver, datasource),
 		driver: driver,
 	}
 }
 
 func open(driver, dataSource string) *sql.DB {
+	logrus.Debugf("connect to database driver(%s) dataSource(%s)", driver, dataSource)
 	db, err := sql.Open(driver, dataSource)
 	if err != nil {
 		logrus.Errorln(err)

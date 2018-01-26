@@ -1,11 +1,8 @@
-FROM alpine:3.6 as alpine
-
-RUN apk add -U --no-cache ca-certificates
-
-FROM scratch
-WORKDIR /bin
-COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
+FROM alpine:latest
+RUN apk update
+RUN apk add ca-certificates
+RUN apk add -U tzdata
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 EXPOSE 8000 9000 80 443
 
 ADD release/boxci-server /bin/
