@@ -6,3 +6,4 @@ npm-debug.log
 db_data
 cmd/agent/agent
 cmd/server/server
+release
