@@ -104,6 +104,10 @@ var migrations = []struct {
 		name: "update-table-set-repo-active",
 		stmt: updateTableSetRepoActive,
 	},
+	{
+		name: "create-table-branches",
+		stmt: createTableBranches,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -467,4 +471,18 @@ ALTER TABLE repos ADD COLUMN repo_active BOOLEAN
 
 var updateTableSetRepoActive = `
 UPDATE repos SET repo_active = true
+`
+
+//
+// 014_create_table_branches.sql
+//
+
+var createTableBranches = `
+CREATE TABLE IF NOT EXISTS branches (
+ branch_id            INTEGER PRIMARY KEY AUTO_INCREMENT
+,branch_name       VARCHAR(250)
+,branch_repo_id     INTEGER
+
+,UNIQUE (branch_name,branch_repo_id)
+);
 `

@@ -6,6 +6,9 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
+	"branch-insert-ignore":      branchInsertIgnore,
+	"branch-find-repo-id":       branchFindRepoId,
+	"branch-del-repo-id":        branchDelRepoId,
 	"config-find-id":            configFindId,
 	"config-find-repo-hash":     configFindRepoHash,
 	"config-find-approved":      configFindApproved,
@@ -37,6 +40,28 @@ var index = map[string]string{
 	"scm_user-update":           scmuserUpdate,
 	"user-find-id-scm":          userFindIdScm,
 }
+
+var branchInsertIgnore = `
+INSERT IGNORE INTO branches (
+ branch_name
+,branch_repo_id
+) VALUES (?,?)
+`
+
+var branchFindRepoId = `
+SELECT
+ branch_name
+,branch_repo_id
+FROM branches
+WHERE branch_repo_id = ?
+LIMIT ? OFFSET ?
+ORDER BY branch_name ASC
+`
+
+var branchDelRepoId = `
+DELETE FROM branches
+WHERE branch_repo_id = ?
+`
 
 var configFindId = `
 SELECT
