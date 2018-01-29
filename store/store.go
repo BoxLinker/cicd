@@ -1,8 +1,9 @@
 package store
 
 import (
-	"github.com/BoxLinker/cicd/models"
 	"io"
+
+	"github.com/BoxLinker/cicd/models"
 )
 
 type Store interface {
@@ -12,10 +13,13 @@ type Store interface {
 	GetUserByIDAndSCM(id int64, scm string) (*models.User, error)
 
 	GetRepo(id int64) (*models.Repo, error)
-	RepoList(u *models.User) ([]*models.Repo)
+	RepoList(u *models.User) []*models.Repo
 	UpdateRepo(repo *models.Repo) error
 	RepoBatch(user *models.User, repos []*models.Repo) error
 	GetRepoOwnerName(owner, repoName string) (*models.Repo, error)
+
+	BranchBatch(repo *models.Repo, branches []*models.Branch) error
+	BranchList(repo *models.Repo, limit, offset int) []*models.Branch
 
 	ConfigLoad(int64) (*models.Config, error)
 	ConfigFind(*models.Repo, string) (*models.Config, error)

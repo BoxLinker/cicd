@@ -2,10 +2,11 @@ package scm
 
 import (
 	"net/http"
+
 	"github.com/BoxLinker/cicd/models"
 )
 
-type SCM interface{
+type SCM interface {
 	Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.User, error)
 
 	Repos(u *models.User) ([]*models.Repo, error)
@@ -21,6 +22,7 @@ type SCM interface{
 
 	Activate(u *models.User, r *models.Repo, link string) error
 	Deactivate(u *models.User, r *models.Repo, link string) error
+	Branches(u *models.User, owner, repoName string) ([]*models.Branch, error)
 }
 
 // Refresher refreshes an oauth token and expiration for the given user. It

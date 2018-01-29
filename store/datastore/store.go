@@ -24,6 +24,10 @@ const (
 	SQLRepoBatch          = "repo-insert-ignore"
 	SQLRepoFindFullName   = "repo-find-fullName"
 	SQLRepoDelID          = "repo-del-id"
+
+	SQLBranchBatch       = "branch-insert-ignore"
+	SQLBranchQueryRepoID = "branch-find-repo-id"
+	SQLBranchDelRepoID   = "branch-del-repo-id"
 )
 
 type datastore struct {

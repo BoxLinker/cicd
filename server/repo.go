@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/BoxLinker/boxlinker-api"
 	"github.com/BoxLinker/cicd/models"
 	"github.com/BoxLinker/cicd/modules/token"
 	"github.com/Sirupsen/logrus"
@@ -23,17 +22,17 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 
 	if flush {
 		if repos, err := s.Manager.GetSCM(u.SCM).Repos(u); err != nil {
-			boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
 		} else {
 			if err := s.Manager.RepoBatch(u, repos); err != nil {
-				boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+				httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 				return
 			}
 		}
 	}
 
-	boxlinker.Resp(w, boxlinker.STATUS_OK, pc.PaginationResult(s.Manager.QueryRepos(u, &pc)))
+	httplib.Resp(w, httplib.STATUS_OK, pc.PaginationResult(s.Manager.QueryRepos(u, &pc)))
 }
 
 func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
@@ -50,12 +49,12 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("PostRepo remote(%s) user(%s) owner(%s) repo(%s)", scmType, user.Login, owner, repoName)
 	repo, err := s.Manager.GetRepoOwnerName(owner, repoName)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_NOT_FOUND, fmt.Sprintf("repo (%s/%s) not found: %s", owner, repoName, err.Error()))
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, fmt.Sprintf("repo (%s/%s) not found: %s", owner, repoName, err.Error()))
 		return
 	}
 
 	if repo.IsActive {
-		boxlinker.Resp(w, 409, nil, "Repository is already active.")
+		httplib.Resp(w, 409, nil, "Repository is already active.")
 		return
 	}
 
@@ -89,7 +88,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 		return
 	}
 
@@ -102,7 +101,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 
 	err = remote.Activate(user, repo, link)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 		return
 	}
 
@@ -113,9 +112,49 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 
 	err = s.Manager.Store().UpdateRepo(repo)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 		return
 	}
 
-	boxlinker.Resp(w, boxlinker.STATUS_OK, repo)
+	httplib.Resp(w, httplib.STATUS_OK, repo)
+}
+
+// GetBuild 根据 repo 和 build_number 获取 build 信息
+func (s *Server) GetBuild(w http.ResponseWriter, r *http.Request) {
+	buildNum, _ := strconv.Atoi(mux.Vars(r)["number"])
+	repo := r.Context().Value("repo").(*models.Repo)
+	build, err := s.Manager.Store().GetBuildNumber(repo, buildNum)
+	if err != nil {
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("build not found: %v", err))
+		return
+	}
+	httplib.Resp(w, httplib.STATUS_OK, build)
+}
+
+// GetRepoBranches 根据 repo 获取 repo 的分支信息
+func (s *Server) GetRepoBranches(w http.ResponseWriter, r *http.Request) {
+	repo := r.Context().Value("repo").(*models.Repo)
+	scmType := httplib.GetQueryParam(r, "scm")
+	refresh := httplib.GetQueryParam(r, "refresh")
+	user := s.getUserInfo(r)
+	pager := httplib.ParsePageConfig(r)
+	remote := s.Manager.GetSCM(scmType)
+	if refresh == "1" {
+		branches, err := remote.Branches(user, repo.Owner, repo.Name)
+		if err != nil {
+			httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("branches not found: %v", err))
+			return
+		}
+		if err := s.Manager.Store().BranchBatch(repo, branches); err != nil {
+			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, fmt.Sprintf("save branches err: %v", err))
+			return
+		}
+	}
+	branches := s.Manager.Store().BranchList(repo, pager.Limit(), pager.Offset())
+	pager.TotalCount = len(branches)
+
+	for _, branch := range branches {
+		branch.RepoID = repo.ID
+	}
+	httplib.Resp(w, httplib.STATUS_OK, pager.FormatOutput(branches))
 }

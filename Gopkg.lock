@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/cabernety/gopkg"
   packages = ["httplib"]
-  revision = "9e338d202d7390f8b0bdd238547a3d3246d4eb18"
+  revision = "123b586611b8b5c9db9c3a605b978a37e275a593"
 
 [[projects]]
   name = "github.com/codegangsta/negroni"

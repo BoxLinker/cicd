@@ -71,6 +71,8 @@ func (s *Server) Run() error {
 	{
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
 		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
+		repoRouter.HandleFunc("/build/{number}", s.GetBuild).Methods("GET")
+		repoRouter.HandleFunc("/branches", s.GetRepoBranches).Methods("GET")
 	}
 
 	streamRouter := getRouter(router, "/v1/cicd/stream/logs/{owner}/{name}", loginRequired, setRepoM)

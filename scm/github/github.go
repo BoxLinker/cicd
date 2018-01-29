@@ -185,6 +185,24 @@ func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 	return repos, nil
 }
 
+func (c *client) Branches(u *models.User, owner, repoName string) ([]*models.Branch, error) {
+	client := c.newClientToken(u.AccessToken)
+	opts := new(github.ListOptions)
+	opts.PerPage = 1000
+	opts.Page = 1
+	branches, _, err := client.Repositories.ListBranches(context.Background(), owner, repoName, opts)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*models.Branch, 0)
+	for _, branch := range branches {
+		result = append(result, &models.Branch{
+			Name: *branch.Name,
+		})
+	}
+	return result, nil
+}
+
 func (c *client) Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.User, error) {
 
 	oauth2Config := &oauth2.Config{
