@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/BoxLinker/cicd/models"
+	"github.com/cabernety/gopkg/httplib"
 )
 
 type Store interface {
@@ -16,7 +17,7 @@ type Store interface {
 	RepoList(u *models.User) []*models.Repo
 	UpdateRepo(repo *models.Repo) error
 	RepoBatch(user *models.User, repos []*models.Repo) error
-	GetRepoOwnerName(owner, repoName string) (*models.Repo, error)
+	GetRepoOwnerName(owner, repoName, scm string) (*models.Repo, error)
 
 	BranchBatch(repo *models.Repo, branches []*models.Branch) error
 	BranchList(repo *models.Repo, limit, offset int) []*models.Branch
@@ -36,6 +37,8 @@ type Store interface {
 	GetBuildLastBefore(repo *models.Repo, branch string, n int64) (*models.Build, error)
 	CreateBuild(*models.Build, ...*models.Proc) error
 	UpdateBuild(*models.Build) error
+	SearchBuild(repo *models.Repo, search string, pc *httplib.PageConfig) []*models.Build
+	QueryBranchBuild(repo *models.Repo, branch string) []*models.Build
 
 	ProcCreate([]*models.Proc) error
 	ProcFind(build *models.Build, pid int) (*models.Proc, error)

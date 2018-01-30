@@ -14,6 +14,6 @@ func (m *DefaultManager) QueryRepos(u *models.User, pc *httplib.PageConfig) []*m
 	return m.dataStore.RepoList(u)
 }
 
-func (m *DefaultManager) GetRepoOwnerName(owner, repoName string) (*models.Repo, error) {
-	return m.dataStore.GetRepoOwnerName(owner, repoName)
+func (m *DefaultManager) GetRepoOwnerName(owner, repoName, scm string) (*models.Repo, error) {
+	return m.dataStore.GetRepoOwnerName(owner, repoName, scm)
 }

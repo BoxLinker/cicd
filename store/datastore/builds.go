@@ -7,6 +7,7 @@ import (
 	"github.com/BoxLinker/cicd/models"
 	"github.com/BoxLinker/cicd/store/datastore/sql"
 	"github.com/Sirupsen/logrus"
+	"github.com/cabernety/gopkg/httplib"
 	"github.com/russross/meddler"
 )
 
@@ -62,6 +63,24 @@ func (db *datastore) UpdateBuild(build *models.Build) error {
 	return meddler.Update(db, "builds", build)
 }
 
+func (db *datastore) SearchBuild(repo *models.Repo, search string, pc *httplib.PageConfig) []*models.Build {
+	result := make([]*models.Build, 0)
+	if err := meddler.QueryAll(db, &result, buildSearch, repo.ID, search+"%", pc.Limit(), pc.Offset()); err != nil {
+		logrus.Errorf("SearchBuild err: %v", err)
+		return nil
+	}
+	return result
+}
+
+func (db *datastore) QueryBranchBuild(repo *models.Repo, branch string) []*models.Build {
+	result := make([]*models.Build, 0)
+	if err := meddler.QueryAll(db, &result, build5BranchQuery, repo.ID, branch); err != nil {
+		logrus.Errorf("QueryBranchBuild err: %v", err)
+		return nil
+	}
+	return result
+}
+
 func (db *datastore) incrementRepoRetry(id int64) (int, error) {
 	repo, err := db.GetRepo(id)
 	if err != nil {
@@ -111,4 +130,21 @@ WHERE build_repo_id = ?
   AND build_id < ?
 ORDER BY build_number DESC
 LIMIT 1
+`
+const build5BranchQuery = `
+SELECT *
+FROM builds
+WHERE build_repo_id = ?
+	AND build_branch = ?
+ORDER BY build_number DESC
+LIMIT 5
+`
+
+const buildSearch = `
+SELECT *
+FROM builds
+WHERE build_repo_id = ?
+	AND build_branch like ?
+ORDER BY build_number DESC
+LIMIT ? OFFSET ?
 `

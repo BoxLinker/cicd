@@ -10,6 +10,7 @@ import (
 func (db *datastore) BranchList(repo *models.Repo, limit, offset int) []*models.Branch {
 	stmt := sql.Lookup(db.driver, SQLBranchQueryRepoID)
 	result := make([]*models.Branch, 0)
+	logrus.Debugf("sql:> %s, %d, %d, %d", stmt, repo.ID, limit, offset)
 	if err := meddler.QueryAll(db, &result, stmt, repo.ID, limit, offset); err != nil {
 		logrus.Errorf("BranchList err: %v", err)
 		return nil

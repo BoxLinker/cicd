@@ -65,6 +65,7 @@ ORDER BY repo_name ASC
 
 SELECT * FROM repos
 WHERE repo_full_name = ?
+  AND repo_scm = ?
 LIMIT 1
 
 -- name: repo-del-id

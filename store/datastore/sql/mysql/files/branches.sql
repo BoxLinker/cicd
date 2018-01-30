@@ -12,8 +12,8 @@ SELECT
 ,branch_repo_id
 FROM branches
 WHERE branch_repo_id = ?
-LIMIT ? OFFSET ?
 ORDER BY branch_name ASC
+LIMIT ? OFFSET ?
 
 -- name: branch-del-repo-id
 

@@ -65,12 +65,12 @@ func (db *datastore) RepoBatch(user *models.User, repos []*models.Repo) error {
 	return nil
 }
 
-func (db *datastore) GetRepoOwnerName(owner, repoName string) (*models.Repo, error) {
+func (db *datastore) GetRepoOwnerName(owner, repoName, scm string) (*models.Repo, error) {
 	stmt := sql.Lookup(db.driver, SQLRepoFindFullName)
 	var repo = new(models.Repo)
 	fullName := fmt.Sprintf("%s/%s", owner, repoName)
-	logrus.Debugf("sql:> %s \n\tparams:> %s", rebind(stmt), fullName)
-	var err = meddler.QueryRow(db, repo, rebind(stmt), fullName)
+	logrus.Debugf("sql:> %s \n\tparams:> %s, %s", rebind(stmt), fullName, scm)
+	var err = meddler.QueryRow(db, repo, rebind(stmt), fullName, scm)
 	if err != nil {
 		logrus.Errorf("[DataStore] GetRepoOwnerName error: %s", err)
 	}

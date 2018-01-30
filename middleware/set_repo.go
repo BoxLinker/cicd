@@ -24,8 +24,9 @@ func NewSetRepo(manager *manager.DefaultManager) negroni.Handler {
 func (s *setRepo) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	owner := mux.Vars(r)["owner"]
 	name := mux.Vars(r)["name"]
-	logrus.Debugf("[Middleware] SetRepo: owner(%s) name(%s)", owner, name)
-	repo, err := s.manager.Store().GetRepoOwnerName(owner, name)
+	scm := mux.Vars(r)["scm"]
+	logrus.Debugf("[Middleware] SetRepo: owner(%s) name(%s) scm(%s)", owner, name, scm)
+	repo, err := s.manager.Store().GetRepoOwnerName(owner, name, scm)
 	if err != nil {
 		logrus.Errorf("GetRepo err: %v", err)
 		boxlinker.Resp(w, boxlinker.STATUS_NOT_FOUND, nil, err.Error())

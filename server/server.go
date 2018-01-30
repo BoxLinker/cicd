@@ -63,19 +63,21 @@ func (s *Server) Run() error {
 	userRouter := getRouter(router, "/v1/cicd/user",
 		loginRequired, scmRequired)
 	{
-		userRouter.HandleFunc("/repos", s.GetRepos).Methods("GET")
+		userRouter.HandleFunc("/repos/{scm}", s.GetRepos).Methods("GET")
 	}
 
-	repoRouter := getRouter(router, "/v1/cicd/repos/{owner}/{name}",
+	repoRouter := getRouter(router, "/v1/cicd/repos/{scm}/{owner}/{name}",
 		loginRequired, scmRequired, setRepoM)
 	{
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
 		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
 		repoRouter.HandleFunc("/build/{number}", s.GetBuild).Methods("GET")
 		repoRouter.HandleFunc("/branches", s.GetRepoBranches).Methods("GET")
+		repoRouter.HandleFunc("/query_branch_build", s.QueryRepoBranchBuilding).Methods("GET")
+		repoRouter.HandleFunc("/search_build", s.SearchRepoBuilding).Methods("GET")
 	}
 
-	streamRouter := getRouter(router, "/v1/cicd/stream/logs/{owner}/{name}", loginRequired, setRepoM)
+	streamRouter := getRouter(router, "/v1/cicd/stream/logs/{scm}/{owner}/{name}", loginRequired, scmRequired, setRepoM)
 	{
 		streamRouter.HandleFunc("/{build}/{number}", s.LogStream).Methods("GET")
 	}

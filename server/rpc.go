@@ -1,38 +1,39 @@
 package server
 
 import (
-	"github.com/BoxLinker/cicd/scm"
-	"github.com/BoxLinker/cicd/queue"
 	"github.com/BoxLinker/cicd/logging"
 	"github.com/BoxLinker/cicd/pubsub"
+	"github.com/BoxLinker/cicd/queue"
+	"github.com/BoxLinker/cicd/scm"
 	"github.com/BoxLinker/cicd/store"
 
-	oldcontext "golang.org/x/net/context"
-	"google.golang.org/grpc/metadata"
-	"github.com/Sirupsen/logrus"
-	"github.com/BoxLinker/cicd/pipeline/rpc"
-	"github.com/BoxLinker/cicd/modules/expr"
+	"bytes"
 	"context"
 	"encoding/json"
-	"strconv"
-	"github.com/BoxLinker/cicd/models"
-	"bytes"
 	"fmt"
+	"strconv"
+
+	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/modules/expr"
+	"github.com/BoxLinker/cicd/pipeline/rpc"
 	"github.com/BoxLinker/cicd/pipeline/rpc/proto"
+	"github.com/Sirupsen/logrus"
+	oldcontext "golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 )
 
 type BoxCIServer struct {
-	SCM scm.SCM
-	Queue queue.Queue
+	SCM    scm.SCM
+	Queue  queue.Queue
 	Logger logging.Log
 	Pubsub pubsub.Publisher
-	Store store.Store
-	Host string
+	Store  store.Store
+	Host   string
 }
 
 func (s *BoxCIServer) Next(c oldcontext.Context, req *proto.NextRequest) (*proto.NextReply, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -65,7 +66,7 @@ func (s *BoxCIServer) Next(c oldcontext.Context, req *proto.NextRequest) (*proto
 
 func (s *BoxCIServer) Init(c oldcontext.Context, req *proto.InitRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -87,7 +88,7 @@ func (s *BoxCIServer) Init(c oldcontext.Context, req *proto.InitRequest) (*proto
 
 func (s *BoxCIServer) Update(c oldcontext.Context, req *proto.UpdateRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -109,7 +110,7 @@ func (s *BoxCIServer) Update(c oldcontext.Context, req *proto.UpdateRequest) (*p
 
 func (s *BoxCIServer) Upload(c oldcontext.Context, req *proto.UploadRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -131,10 +132,9 @@ func (s *BoxCIServer) Upload(c oldcontext.Context, req *proto.UploadRequest) (*p
 	return res, err
 }
 
-
 func (s *BoxCIServer) Done(c oldcontext.Context, req *proto.DoneRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -156,7 +156,7 @@ func (s *BoxCIServer) Done(c oldcontext.Context, req *proto.DoneRequest) (*proto
 
 func (s *BoxCIServer) Wait(c oldcontext.Context, req *proto.WaitRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -170,7 +170,7 @@ func (s *BoxCIServer) Wait(c oldcontext.Context, req *proto.WaitRequest) (*proto
 
 func (s *BoxCIServer) Extend(c oldcontext.Context, req *proto.ExtendRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -184,7 +184,7 @@ func (s *BoxCIServer) Extend(c oldcontext.Context, req *proto.ExtendRequest) (*p
 
 func (s *BoxCIServer) Log(c oldcontext.Context, req *proto.LogRequest) (*proto.Empty, error) {
 	peer := RPC{
-		scm: s.SCM,
+		scm:    s.SCM,
 		store:  s.Store,
 		queue:  s.Queue,
 		pubsub: s.Pubsub,
@@ -201,8 +201,6 @@ func (s *BoxCIServer) Log(c oldcontext.Context, req *proto.LogRequest) (*proto.E
 	err := peer.Log(c, req.GetId(), line)
 	return res, err
 }
-
-
 
 func createFilterFunc(filter rpc.Filter) (queue.Filter, error) {
 	var st *expr.Selector
@@ -231,14 +229,13 @@ func createFilterFunc(filter rpc.Filter) (queue.Filter, error) {
 }
 
 type RPC struct {
-	scm scm.SCM
-	queue queue.Queue
+	scm    scm.SCM
+	queue  queue.Queue
 	pubsub pubsub.Publisher
 	logger logging.Log
-	store store.Store
-	host string
+	store  store.Store
+	host   string
 }
-
 
 func (s *RPC) Next(c context.Context, filter rpc.Filter) (*rpc.Pipeline, error) {
 	metadata, ok := metadata.FromIncomingContext(c)
@@ -336,12 +333,12 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 	build.Procs = models.Tree(build.Procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
-			"repo": repo.FullName,
+			"repo":    repo.FullName,
 			"private": strconv.FormatBool(repo.IsPrivate),
 		},
 	}
 	message.Data, _ = json.Marshal(models.Event{
-		Repo: *repo,
+		Repo:  *repo,
 		Build: *build,
 	})
 	s.pubsub.Publish(c, "topic/events", message)
@@ -415,7 +412,6 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 	return s.store.FileCreate(report, bytes.NewBuffer(file.Data))
 }
 
-
 // Init implements the rpc.Init function
 func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
 	procID, err := strconv.ParseInt(id, 10, 64)
@@ -475,7 +471,6 @@ func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
 	proc.State = models.StatusRunning
 	return s.store.ProcUpdate(proc)
 }
-
 
 // Done implements the rpc.Done function
 func (s *RPC) Done(c context.Context, id string, state rpc.State) error {

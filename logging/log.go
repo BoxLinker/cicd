@@ -1,9 +1,11 @@
 package logging
 
 import (
-	"sync"
 	"context"
 	"io"
+	"sync"
+
+	"github.com/Sirupsen/logrus"
 )
 
 type subscriber struct {
@@ -51,6 +53,7 @@ func (l *log) Write(c context.Context, path string, entry *Entry) error {
 	s, ok := l.streams[path]
 	l.Unlock()
 	if !ok {
+		logrus.Errorf("log write err not found: %s", path)
 		return ErrNotFound
 	}
 	s.Lock()

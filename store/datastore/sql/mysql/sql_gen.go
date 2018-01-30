@@ -54,8 +54,8 @@ SELECT
 ,branch_repo_id
 FROM branches
 WHERE branch_repo_id = ?
-LIMIT ? OFFSET ?
 ORDER BY branch_name ASC
+LIMIT ? OFFSET ?
 `
 
 var branchDelRepoId = `
@@ -349,6 +349,7 @@ ORDER BY repo_name ASC
 var repoFindFullName = `
 SELECT * FROM repos
 WHERE repo_full_name = ?
+  AND repo_scm = ?
 LIMIT 1
 `
 

@@ -36,18 +36,14 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
-	scmType := httplib.GetQueryParam(r, "scm")
-	if scmType == "" || !models.SCMExists(scmType) {
-		http.Error(w, "wrong scm type", http.StatusBadRequest)
-		return
-	}
+	scmType := mux.Vars(r)["scm"]
 	remote := s.Manager.GetSCM(scmType)
 	_ = remote
 	user := s.getUserInfo(r)
 	owner := mux.Vars(r)["owner"]
 	repoName := mux.Vars(r)["name"]
 	logrus.Debugf("PostRepo remote(%s) user(%s) owner(%s) repo(%s)", scmType, user.Login, owner, repoName)
-	repo, err := s.Manager.GetRepoOwnerName(owner, repoName)
+	repo, err := s.Manager.GetRepoOwnerName(owner, repoName, scmType)
 	if err != nil {
 		httplib.Resp(w, httplib.STATUS_NOT_FOUND, fmt.Sprintf("repo (%s/%s) not found: %s", owner, repoName, err.Error()))
 		return
@@ -131,10 +127,34 @@ func (s *Server) GetBuild(w http.ResponseWriter, r *http.Request) {
 	httplib.Resp(w, httplib.STATUS_OK, build)
 }
 
+// QueryRepoBranchBuilding 查询指定分支下的最近 5 条构建记录
+func (s *Server) QueryRepoBranchBuilding(w http.ResponseWriter, r *http.Request) {
+	repo := r.Context().Value("repo").(*models.Repo)
+	branch := httplib.GetQueryParam(r, "branch")
+	builds := s.Manager.Store().QueryBranchBuild(repo, branch)
+	httplib.Resp(w, httplib.STATUS_OK, builds)
+}
+
+/*
+SearchRepoBuilding 获取 repo 的构建记录, 默认按时间倒序
+ params:
+	search 搜索, 可以为 分支、用户名 等 ，如果指定 search 则 branch 参数忽略
+	branch 指定分支
+	currentPage
+	pageCount
+*/
+func (s *Server) SearchRepoBuilding(w http.ResponseWriter, r *http.Request) {
+	repo := r.Context().Value("repo").(*models.Repo)
+	pager := httplib.ParsePageConfig(r)
+	search := httplib.GetQueryParam(r, "search")
+	builds := s.Manager.Store().SearchBuild(repo, search, &pager)
+	httplib.Resp(w, httplib.STATUS_OK, pager.FormatOutput(builds))
+}
+
 // GetRepoBranches 根据 repo 获取 repo 的分支信息
 func (s *Server) GetRepoBranches(w http.ResponseWriter, r *http.Request) {
 	repo := r.Context().Value("repo").(*models.Repo)
-	scmType := httplib.GetQueryParam(r, "scm")
+	scmType := mux.Vars(r)["scm"]
 	refresh := httplib.GetQueryParam(r, "refresh")
 	user := s.getUserInfo(r)
 	pager := httplib.ParsePageConfig(r)

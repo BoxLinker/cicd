@@ -1,31 +1,32 @@
 package server
 
 import (
-	"net/http"
-	"github.com/gorilla/mux"
-	"github.com/BoxLinker/cicd/models"
-	"github.com/Sirupsen/logrus"
-	"regexp"
-	"crypto/sha256"
-	"fmt"
-	"github.com/BoxLinker/cicd/pipeline/frontend/yaml"
-	"encoding/json"
-	"github.com/cabernety/gopkg/httplib"
-	"github.com/BoxLinker/cicd/pipeline/backend"
-	"github.com/BoxLinker/cicd/pipeline/frontend/yaml/matrix"
-	"github.com/BoxLinker/cicd/pipeline/frontend"
-	"time"
-	"github.com/BoxLinker/cicd/queue"
-	"github.com/BoxLinker/cicd/pipeline/rpc"
 	"context"
-	"github.com/BoxLinker/cicd/pubsub"
-	"strconv"
-	"github.com/BoxLinker/cicd/modules/token"
-	"github.com/BoxLinker/cicd/pipeline/frontend/yaml/compiler"
-	"github.com/BoxLinker/cicd/modules/envsubst"
-	"strings"
-	"github.com/BoxLinker/cicd/modules/linter"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"math/rand"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/modules/envsubst"
+	"github.com/BoxLinker/cicd/modules/linter"
+	"github.com/BoxLinker/cicd/modules/token"
+	"github.com/BoxLinker/cicd/pipeline/backend"
+	"github.com/BoxLinker/cicd/pipeline/frontend"
+	"github.com/BoxLinker/cicd/pipeline/frontend/yaml"
+	"github.com/BoxLinker/cicd/pipeline/frontend/yaml/compiler"
+	"github.com/BoxLinker/cicd/pipeline/frontend/yaml/matrix"
+	"github.com/BoxLinker/cicd/pipeline/rpc"
+	"github.com/BoxLinker/cicd/pubsub"
+	"github.com/BoxLinker/cicd/queue"
+	"github.com/Sirupsen/logrus"
+	"github.com/cabernety/gopkg/httplib"
+	"github.com/gorilla/mux"
 )
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
@@ -33,7 +34,7 @@ var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 	scmType := mux.Vars(r)["scm"]
 	if !models.SCMExists(scmType) {
-		http.Error(w,  "bad scm type", http.StatusBadRequest)
+		http.Error(w, "bad scm type", http.StatusBadRequest)
 		return
 	}
 
@@ -62,7 +63,7 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo, err := s.Manager.GetRepoOwnerName(tmpRepo.Owner, tmpRepo.Name)
+	repo, err := s.Manager.GetRepoOwnerName(tmpRepo.Owner, tmpRepo.Name, scmType)
 	if err != nil {
 		logrus.Errorf("failed to find repo %s/%s from hook. %s", tmpRepo.Owner, tmpRepo.Name, err)
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -76,7 +77,7 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsed, err := token.ParseRequest(r, func (t *token.Token) (string, error) {
+	parsed, err := token.ParseRequest(r, func(t *token.Token) (string, error) {
 		return repo.Hash, nil
 	})
 	if err != nil {
@@ -101,7 +102,7 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		(build.Event == models.EventPull && repo.AllowPull) ||
 		(build.Event == models.EventDeploy && repo.AllowDeploy) ||
 		(build.Event == models.EventTag && repo.AllowTag) {
-			skipped = false
+		skipped = false
 	}
 
 	if skipped {
@@ -133,8 +134,8 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		conf = &models.Config{
 			RepoID: repo.ID,
-			Data: string(confb),
-			Hash: sha,
+			Data:   string(confb),
+			Hash:   sha,
 		}
 		err = configStore.ConfigCreate(conf)
 		if err != nil {
@@ -205,7 +206,7 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 	// on status change notifications
 	last, _ := s.Manager.Store().GetBuildLastBefore(repo, build.Branch, build.ID)
 
-	defer func(){
+	defer func() {
 		uri := fmt.Sprintf("%s/%s/%d", httplib.GetURL(r), repo.FullName, build.Number)
 		err = remote.Status(user, repo, build, uri)
 		if err != nil {
@@ -248,11 +249,11 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 				}
 				proc := &models.Proc{
 					BuildID: build.ID,
-					Name: 		step.Alias,
-					PID: 		pcounter,
-					PPID: 		item.Proc.PID,
-					PGID: 		gid,
-					State: 		models.StatusPending,
+					Name:    step.Alias,
+					PID:     pcounter,
+					PPID:    item.Proc.PID,
+					PGID:    gid,
+					State:   models.StatusPending,
 				}
 				build.Procs = append(build.Procs, proc)
 			}
@@ -267,15 +268,15 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 	// publish topic
 	message := pubsub.Message{
 		Labels: map[string]string{
-			"repo": repo.FullName,
+			"repo":    repo.FullName,
 			"private": strconv.FormatBool(repo.IsPrivate),
 		},
 	}
 	buildCopy := *build
 	buildCopy.Procs = models.Tree(buildCopy.Procs)
 	message.Data, _ = json.Marshal(models.Event{
-		Type: models.Enqueued,
-		Repo: *repo,
+		Type:  models.Enqueued,
+		Repo:  *repo,
 		Build: buildCopy,
 	})
 	s.Manager.Pubsub().Publish(r.Context(), "topic/events", message)
@@ -291,11 +292,11 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		task.Labels["repo"] = b.Repo.FullName
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID: fmt.Sprint(item.Proc.ID),
-			Config: item.Config,
+			ID:      fmt.Sprint(item.Proc.ID),
+			Config:  item.Config,
 			Timeout: b.Repo.Timeout,
 		})
-
+		logrus.Debugf("logs open: %s", task.ID)
 		s.Manager.Logs().Open(context.Background(), task.ID)
 		s.Manager.Queue().Push(context.Background(), task)
 	}
@@ -303,22 +304,22 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 }
 
 type builder struct {
-	Repo *models.Repo
-	Curr *models.Build
-	Last *models.Build
+	Repo  *models.Repo
+	Curr  *models.Build
+	Last  *models.Build
 	Netrc *models.Netrc
 	Secs  []*models.Secret
 	Regs  []*models.Registry
-	Link string
-	Yaml string // 项目的 ci 配置文件
+	Link  string
+	Yaml  string // 项目的 ci 配置文件
 	Envs  map[string]string
 }
 
 type buildItem struct {
-	Proc 	*models.Proc
+	Proc     *models.Proc
 	Platform string
-	Labels map[string]string
-	Config *backend.Config
+	Labels   map[string]string
+	Config   *backend.Config
 }
 
 func (b *builder) Build() ([]*buildItem, error) {
@@ -334,9 +335,9 @@ func (b *builder) Build() ([]*buildItem, error) {
 	for i, axis := range axes {
 		proc := &models.Proc{
 			BuildID: b.Curr.ID,
-			PID: 	 i + 1,
-			PGID: 	 i + 1,
-			State: 	 models.StatusPending,
+			PID:     i + 1,
+			PGID:    i + 1,
+			State:   models.StatusPending,
 			Environ: axis,
 		}
 
@@ -355,7 +356,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				continue
 			}
 			secrets = append(secrets, compiler.Secret{
-				Name: sec.Name,
+				Name:  sec.Name,
 				Value: sec.Value,
 				Match: sec.Images,
 			})
@@ -396,7 +397,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				Hostname: reg.Address,
 				Username: reg.Username,
 				Password: reg.Password,
-				Email: 	  reg.Email,
+				Email:    reg.Email,
 			})
 		}
 
@@ -432,9 +433,9 @@ func (b *builder) Build() ([]*buildItem, error) {
 		).Compile(parsed)
 
 		item := &buildItem{
-			Proc: proc,
-			Config: ir,
-			Labels: parsed.Labels,
+			Proc:     proc,
+			Config:   ir,
+			Labels:   parsed.Labels,
 			Platform: metadata.Sys.Arch,
 		}
 		if item.Labels == nil {
@@ -449,7 +450,6 @@ func shasum(raw []byte) string {
 	sum := sha256.Sum256(raw)
 	return fmt.Sprintf("%x", sum)
 }
-
 
 // return the metadata from the cli context.
 func metadataFromStruct(repo *models.Repo, build, last *models.Build, proc *models.Proc, link string) frontend.Metadata {
