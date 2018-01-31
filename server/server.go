@@ -8,7 +8,6 @@ import (
 	"github.com/BoxLinker/cicd/manager"
 	"github.com/BoxLinker/cicd/middleware"
 	"github.com/Sirupsen/logrus"
-	"github.com/cabernety/gopkg/httplib"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -60,10 +59,10 @@ func (s *Server) Run() error {
 
 	router.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
 
-	userRouter := getRouter(router, "/v1/cicd/user",
+	userRouter := getRouter(router, "/v1/cicd/user/repos/{scm}",
 		loginRequired, scmRequired)
 	{
-		userRouter.HandleFunc("/repos/{scm}", s.GetRepos).Methods("GET")
+		userRouter.HandleFunc("", s.GetRepos).Methods("GET")
 	}
 
 	repoRouter := getRouter(router, "/v1/cicd/repos/{scm}/{owner}/{name}",
@@ -137,6 +136,6 @@ func (a *Server) getCtxUserID(r *http.Request) string {
 }
 
 func (a *Server) getUserInfo(r *http.Request) *models.User {
-	scm := httplib.GetQueryParam(r, "scm")
+	scm := mux.Vars(r)["scm"]
 	return a.Manager.GetUserByUCenterID(a.getCtxUserID(r), scm)
 }
