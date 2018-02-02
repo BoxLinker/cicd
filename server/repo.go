@@ -8,14 +8,28 @@ import (
 
 	"github.com/BoxLinker/cicd/models"
 	"github.com/BoxLinker/cicd/modules/token"
+	"github.com/BoxLinker/cicd/store"
 	"github.com/Sirupsen/logrus"
 	"github.com/cabernety/gopkg/httplib"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 )
 
+func (s *Server) GetRepo(w http.ResponseWriter, r *http.Request) {
+	scm := mux.Vars(r)["scm"]
+	owner := mux.Vars(r)["owner"]
+	name := mux.Vars(r)["name"]
+	repo, err := s.Manager.Store().GetRepoOwnerName(owner, name, scm)
+	if err != nil {
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("repo not found: %v", err))
+		return
+	}
+	httplib.Resp(w, httplib.STATUS_OK, repo)
+}
+
 func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 	flush, _ := strconv.ParseBool(httplib.GetQueryParam(r, "flush"))
+	active, _ := strconv.ParseBool(httplib.GetQueryParam(r, "active"))
 	pc := httplib.ParsePageConfig(r)
 	u := s.getUserInfo(r)
 	if u == nil || u.AccessToken == "" {
@@ -27,13 +41,17 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 		if repos, err := s.Manager.GetSCM(u.SCM).Repos(u); err != nil {
 			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
-		} else if err := s.Manager.RepoBatch(u, repos); err != nil {
+		} else if err := s.Manager.Store().RepoBatch(u, repos); err != nil {
 			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
 		}
 	}
 
-	httplib.Resp(w, httplib.STATUS_OK, pc.PaginationResult(s.Manager.QueryRepos(u, &pc)))
+	httplib.Resp(w, httplib.STATUS_OK, pc.PaginationResult(s.Manager.Store().RepoList(&store.RepoListOptions{
+		User:       u,
+		Active:     active,
+		Pagination: &pc,
+	})))
 }
 
 func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +62,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	owner := mux.Vars(r)["owner"]
 	repoName := mux.Vars(r)["name"]
 	logrus.Debugf("PostRepo remote(%s) user(%s) owner(%s) repo(%s)", scmType, user.Login, owner, repoName)
-	repo, err := s.Manager.GetRepoOwnerName(owner, repoName, scmType)
+	repo, err := s.Manager.Store().GetRepoOwnerName(owner, repoName, scmType)
 	if err != nil {
 		httplib.Resp(w, httplib.STATUS_NOT_FOUND, fmt.Sprintf("repo (%s/%s) not found: %s", owner, repoName, err.Error()))
 		return
@@ -114,18 +132,6 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httplib.Resp(w, httplib.STATUS_OK, repo)
-}
-
-// GetBuild 根据 repo 和 build_number 获取 build 信息
-func (s *Server) GetBuild(w http.ResponseWriter, r *http.Request) {
-	buildNum, _ := strconv.Atoi(mux.Vars(r)["number"])
-	repo := r.Context().Value("repo").(*models.Repo)
-	build, err := s.Manager.Store().GetBuildNumber(repo, buildNum)
-	if err != nil {
-		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("build not found: %v", err))
-		return
-	}
-	httplib.Resp(w, httplib.STATUS_OK, build)
 }
 
 // QueryRepoBranchBuilding 查询指定分支下的最近 5 条构建记录

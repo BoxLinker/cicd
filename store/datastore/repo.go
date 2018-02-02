@@ -2,8 +2,10 @@ package datastore
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/store"
 	"github.com/BoxLinker/cicd/store/datastore/sql"
 	"github.com/Sirupsen/logrus"
 	"github.com/russross/meddler"
@@ -17,10 +19,37 @@ func (db *datastore) GetRepo(id int64) (*models.Repo, error) {
 	return repo, err
 }
 
-func (db *datastore) RepoList(u *models.User) []*models.Repo {
-	stmt := sql.Lookup(db.driver, SQLQueryReposByUserID)
+func (db *datastore) RepoList(opt *store.RepoListOptions) []*models.Repo {
+	stmt := "SELECT * FROM repos WHERE 1=1"
+	args := make([]interface{}, 0)
+	if opt.User != nil {
+		stmt += " AND repo_user_id = ?"
+		args = append(args, opt.User.ID)
+	}
+	if !opt.All {
+		stmt += " AND repo_active = ?"
+		if opt.Active {
+			args = append(args, "1")
+		} else {
+			args = append(args, "0")
+		}
+	}
+	stmt += " ORDER BY repo_name ASC"
+	if opt.Pagination != nil {
+		limit := opt.Pagination.Limit()
+		offset := opt.Pagination.Offset()
+		if limit >= 0 {
+			stmt += " LIMIT ?"
+			args = append(args, limit)
+		}
+		if offset >= 0 {
+			stmt += " OFFSET ?"
+			args = append(args, offset)
+		}
+	}
 	data := make([]*models.Repo, 0)
-	if err := meddler.QueryAll(db, &data, stmt, u.ID); err != nil {
+	logrus.Infof("sql:> %s", fmt.Sprintf(strings.Replace(stmt, "?", "%v", -1), args...))
+	if err := meddler.QueryAll(db, &data, stmt, args...); err != nil {
 		logrus.Errorf("DataStore RepoList err (%s)", err.Error())
 		return nil
 	}

@@ -69,6 +69,8 @@ func (s *Server) Run() error {
 		loginRequired, scmRequired, setRepoM)
 	{
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
+		repoRouter.HandleFunc("", s.GetRepo).Methods("GET")
+		repoRouter.HandleFunc("/procs/{build_id}", s.GetProcs).Methods("GET")
 		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
 		repoRouter.HandleFunc("/build/{number}", s.GetBuild).Methods("GET")
 		repoRouter.HandleFunc("/branches", s.GetRepoBranches).Methods("GET")

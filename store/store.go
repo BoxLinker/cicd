@@ -7,6 +7,13 @@ import (
 	"github.com/cabernety/gopkg/httplib"
 )
 
+type RepoListOptions struct {
+	Active     bool
+	User       *models.User
+	All        bool
+	Pagination *httplib.PageConfig
+}
+
 type Store interface {
 	SaveUser(user *models.User) error
 	GetUserByUCenterID(uCenterID string, scm string) *models.User
@@ -14,7 +21,7 @@ type Store interface {
 	GetUserByIDAndSCM(id int64, scm string) (*models.User, error)
 
 	GetRepo(id int64) (*models.Repo, error)
-	RepoList(u *models.User) []*models.Repo
+	RepoList(opt *RepoListOptions) []*models.Repo
 	UpdateRepo(repo *models.Repo) error
 	RepoBatch(user *models.User, repos []*models.Repo) error
 	GetRepoOwnerName(owner, repoName, scm string) (*models.Repo, error)
