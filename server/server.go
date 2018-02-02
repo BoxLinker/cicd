@@ -57,15 +57,15 @@ func (s *Server) Run() error {
 	//userRouterN.UseHandler(userRouter)
 	//globalMux.Handle("/v1/cicd/user", userRouterN)
 
-	router.HandleFunc("/v1/cicd/hook/{scm}", s.Hook).Methods("POST")
+	router.HandleFunc("/v1/cicd/{scm}/hook", s.Hook).Methods("POST")
 
-	userRouter := getRouter(router, "/v1/cicd/user/repos/{scm}",
+	userRouter := getRouter(router, "/v1/cicd/{scm}/user",
 		loginRequired, scmRequired)
 	{
-		userRouter.HandleFunc("", s.GetRepos).Methods("GET")
+		userRouter.HandleFunc("/repos", s.GetRepos).Methods("GET")
 	}
 
-	repoRouter := getRouter(router, "/v1/cicd/repos/{scm}/{owner}/{name}",
+	repoRouter := getRouter(router, "/v1/cicd/{scm}/repos/{owner}/{name}",
 		loginRequired, scmRequired, setRepoM)
 	{
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
@@ -76,15 +76,15 @@ func (s *Server) Run() error {
 		repoRouter.HandleFunc("/search_build", s.SearchRepoBuilding).Methods("GET")
 	}
 
-	streamRouter := getRouter(router, "/v1/cicd/stream/logs/{scm}/{owner}/{name}", loginRequired, scmRequired, setRepoM)
+	streamRouter := getRouter(router, "/v1/cicd/{scm}/stream/logs/{owner}/{name}", loginRequired, scmRequired, setRepoM)
 	{
 		streamRouter.HandleFunc("/{build}/{number}", s.LogStream).Methods("GET")
 	}
 
-	authorizeRouter := getRouter(router, "/v1/cicd/authorize",
+	authorizeRouter := getRouter(router, "/v1/cicd/{scm}",
 		authorizeTokenM)
 	{
-		authorizeRouter.HandleFunc("/{scm}", s.AuthCodeBase).Methods("POST", "GET")
+		authorizeRouter.HandleFunc("/authorize", s.AuthCodeBase).Methods("POST", "GET")
 	}
 
 	//repoRouter := mux.NewRouter().
@@ -137,5 +137,5 @@ func (a *Server) getCtxUserID(r *http.Request) string {
 
 func (a *Server) getUserInfo(r *http.Request) *models.User {
 	scm := mux.Vars(r)["scm"]
-	return a.Manager.GetUserByUCenterID(a.getCtxUserID(r), scm)
+	return a.Manager.Store().GetUserByUCenterID(a.getCtxUserID(r), scm)
 }

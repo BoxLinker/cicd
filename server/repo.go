@@ -18,17 +18,18 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 	flush, _ := strconv.ParseBool(httplib.GetQueryParam(r, "flush"))
 	pc := httplib.ParsePageConfig(r)
 	u := s.getUserInfo(r)
-	logrus.Debugf("GetRepos (%s)", u.SCM)
+	if u == nil || u.AccessToken == "" {
+		httplib.Resp(w, ScmAuthorized, nil)
+		return
+	}
 
 	if flush {
 		if repos, err := s.Manager.GetSCM(u.SCM).Repos(u); err != nil {
 			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
-		} else {
-			if err := s.Manager.RepoBatch(u, repos); err != nil {
-				httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
-				return
-			}
+		} else if err := s.Manager.RepoBatch(u, repos); err != nil {
+			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+			return
 		}
 	}
 
@@ -89,7 +90,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link := fmt.Sprintf(
-		"%s/v1/cicd/hook/%s?access_token=%s",
+		"%s/v1/cicd/%s/hook?access_token=%s",
 		httplib.GetURL(r),
 		repo.SCM,
 		sig,

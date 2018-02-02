@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cabernety/gopkg/httplib"
+
 	"github.com/gorilla/mux"
 
-	"github.com/BoxLinker/boxlinker-api"
 	"github.com/BoxLinker/cicd/models"
 	"github.com/codegangsta/negroni"
 )
@@ -21,7 +22,7 @@ func NewSCMRequired() negroni.Handler {
 func (a *SCMRequired) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	s := mux.Vars(r)["scm"]
 	if s == "" || !models.SCMExists(s) {
-		boxlinker.Resp(w, 400, nil, fmt.Sprintf("scm(%s) param err", s))
+		httplib.Resp(w, 400, nil, fmt.Sprintf("scm(%s) param err", s))
 		return
 	}
 
