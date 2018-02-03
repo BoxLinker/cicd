@@ -40,6 +40,8 @@ type Store interface {
 
 	GetBuild(int64) (*models.Build, error)
 	GetBuildNumber(repo *models.Repo, num int) (*models.Build, error)
+	BuildCount(repo *models.Repo) int
+	QueryBuild(repo *models.Repo, pc *httplib.PageConfig) []*models.Build
 	// gets the last build before build number N
 	GetBuildLastBefore(repo *models.Repo, branch string, n int64) (*models.Build, error)
 	CreateBuild(*models.Build, ...*models.Proc) error

@@ -63,6 +63,30 @@ func (db *datastore) UpdateBuild(build *models.Build) error {
 	return meddler.Update(db, "builds", build)
 }
 
+func (db *datastore) QueryBuild(repo *models.Repo, pc *httplib.PageConfig) []*models.Build {
+	result := make([]*models.Build, 0)
+	stmt := "SELECT * FROM builds WHERE build_repo_id = ? ORDER BY build_created DESC LIMIT ? OFFSET ?"
+	logrus.Infof("sql:> %s", formatSql(stmt, repo.ID, pc.Limit(), pc.Offset()))
+	if err := meddler.QueryAll(db, &result, stmt, repo.ID, pc.Limit(), pc.Offset()); err != nil {
+		logrus.Errorf("QueryBuild err: %v", err)
+		return nil
+	}
+	return result
+}
+
+func (db *datastore) BuildCount(repo *models.Repo) int {
+	stmt := "select count(*) count from builds where build_repo_id = ?"
+	logrus.Infof("sql:> %s", formatSql(stmt, repo.ID))
+	var result struct {
+		Count int `meddler:"count"`
+	}
+	if err := meddler.QueryRow(db, &result, stmt, repo.ID); err != nil {
+		logrus.Errorf("CountBuild err: %v", err)
+		return 0
+	}
+	return result.Count
+}
+
 func (db *datastore) SearchBuild(repo *models.Repo, search string, pc *httplib.PageConfig) []*models.Build {
 	result := make([]*models.Build, 0)
 	if err := meddler.QueryAll(db, &result, buildSearch, repo.ID, search+"%", pc.Limit(), pc.Offset()); err != nil {
