@@ -1,23 +1,24 @@
 package main
 
 import (
-	"github.com/urfave/cli"
-	"github.com/Sirupsen/logrus"
-	cicdServer "github.com/BoxLinker/cicd/server"
-	"os"
-	"github.com/BoxLinker/cicd/manager"
-	"golang.org/x/sync/errgroup"
-	"net"
-	"google.golang.org/grpc"
 	"context"
-	"google.golang.org/grpc/metadata"
-	oldcontext "golang.org/x/net/context"
 	"errors"
-	"github.com/BoxLinker/cicd/store/datastore"
-	"github.com/BoxLinker/cicd/pipeline/rpc/proto"
+	"net"
+	"os"
+
 	"github.com/BoxLinker/cicd/logging"
-	"github.com/BoxLinker/cicd/pubsub"
+	"github.com/BoxLinker/cicd/manager"
 	"github.com/BoxLinker/cicd/models"
+	"github.com/BoxLinker/cicd/pipeline/rpc/proto"
+	"github.com/BoxLinker/cicd/pubsub"
+	cicdServer "github.com/BoxLinker/cicd/server"
+	"github.com/BoxLinker/cicd/store/datastore"
+	"github.com/Sirupsen/logrus"
+	"github.com/urfave/cli"
+	oldcontext "golang.org/x/net/context"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var flags = []cli.Flag{
@@ -28,60 +29,60 @@ var flags = []cli.Flag{
 	},
 	cli.StringFlag{
 		EnvVar: "LISTEN",
-		Name: "listen",
-		Usage: "http listen address",
+		Name:   "listen",
+		Usage:  "http listen address",
 	},
 	cli.StringFlag{
 		EnvVar: "TCP_LISTEN",
-		Name: "tcp-listen",
-		Usage: "tcp listen address",
-		Value: ":9000",
+		Name:   "tcp-listen",
+		Usage:  "tcp listen address",
+		Value:  ":9000",
 	},
 	cli.BoolFlag{
 		EnvVar: "KUBERNETES_IN_CLUSTER",
-		Name: "kubernetes-in-cluster",
-		Usage: "whether connect to kubernetes by in cluster mode",
+		Name:   "kubernetes-in-cluster",
+		Usage:  "whether connect to kubernetes by in cluster mode",
 	},
 	cli.StringFlag{
 		EnvVar: "HOME_HOST",
-		Name: "home-host",
-		Usage: "boxlinker home page host",
+		Name:   "home-host",
+		Usage:  "boxlinker home page host",
 	},
 	cli.StringFlag{
 		EnvVar: "DATABASE_DRIVER",
-		Name: "database-driver",
+		Name:   "database-driver",
 	},
 	cli.StringFlag{
 		EnvVar: "DATABASE_DATASOURCE",
-		Name: "database-datasource",
+		Name:   "database-datasource",
 	},
 	cli.StringFlag{
 		EnvVar: "TOKEN_AUTH_URL",
-		Name: "token-auth-url",
+		Name:   "token-auth-url",
 	},
 	cli.BoolFlag{
 		EnvVar: "GITHUB",
-		Name: "github",
+		Name:   "github",
 	},
 	cli.StringFlag{
 		EnvVar: "GITHUB_SERVER",
-		Name: "github-server",
+		Name:   "github-server",
 	},
 	cli.StringFlag{
 		EnvVar: "GITHUB_CLIENT",
-		Name: "github-client",
+		Name:   "github-client",
 	},
 	cli.StringFlag{
 		EnvVar: "GITHUB_SECRET",
-		Name: "github-secret",
+		Name:   "github-secret",
 	},
 	cli.StringSliceFlag{
 		EnvVar: "GITHUB_SCOPE",
-		Name: "github-scope",
+		Name:   "github-scope",
 	},
 	cli.StringFlag{
 		EnvVar: "AGENT_SECRET",
-		Name: "agent-secret",
+		Name:   "agent-secret",
 	},
 	cli.StringFlag{
 		EnvVar: "REPO_CONFIG",
@@ -118,12 +119,12 @@ func server(c *cli.Context) error {
 	pubsubs := pubsub.New()
 
 	controllerManager, err := manager.New(&manager.Options{
-		Store: dataStore,
+		Store:               dataStore,
 		KubernetesInCluster: c.Bool("kubernetes-in-cluster"),
-		SCMMap: scmMap,
-		Logs: logs,
-		Queue: queues,
-		Pubsub: pubsubs,
+		SCMMap:              scmMap,
+		Logs:                logs,
+		Queue:               queues,
+		Pubsub:              pubsubs,
 	})
 
 	if err != nil {
@@ -132,15 +133,15 @@ func server(c *cli.Context) error {
 
 	var g errgroup.Group
 
-	g.Go(func ()error{
+	g.Go(func() error {
 		cs := new(cicdServer.Server)
 		//cs.CodeBase = cb
 		cs.Manager = controllerManager
 		cs.Listen = c.String("listen")
 		cs.Config = cicdServer.Config{
 			TokenAuthURL: c.String("token-auth-url"),
-			HomeHost: c.String("home-host"),
-			RepoConfig: c.String("repo-config"),
+			HomeHost:     c.String("home-host"),
+			RepoConfig:   c.String("repo-config"),
 		}
 
 		return cs.Run()

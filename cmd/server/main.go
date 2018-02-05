@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/urfave/cli"
-	"github.com/BoxLinker/cicd/version"
-	_ "github.com/joho/godotenv/autoload"
 	"fmt"
 	"os"
+
+	"github.com/BoxLinker/cicd/version"
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/urfave/cli"
 )
 
-func main(){
+func main() {
 	app := cli.NewApp()
 	app.Name = "drone-server"
 	app.Version = version.Version.String()
