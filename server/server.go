@@ -72,6 +72,7 @@ func (s *Server) Run() error {
 		repoRouter.HandleFunc("", s.GetRepo).Methods("GET")
 		repoRouter.HandleFunc("/procs/{build_id}", s.GetProcs).Methods("GET")
 		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
+		repoRouter.HandleFunc("/builds/{number}", s.PostBuild).Methods("POST")
 		repoRouter.HandleFunc("/builds/{number}", s.GetBuild).Methods("GET")
 		repoRouter.HandleFunc("/builds", s.QueryBuild).Methods("GET")
 		repoRouter.HandleFunc("/branches", s.GetRepoBranches).Methods("GET")

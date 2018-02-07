@@ -2,16 +2,17 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/BoxLinker/boxlinker-api"
 	"github.com/BoxLinker/cicd/logging"
 	"github.com/BoxLinker/cicd/models"
 	"github.com/Sirupsen/logrus"
+	"github.com/cabernety/gopkg/httplib"
 	"github.com/gorilla/mux"
 )
 
@@ -23,16 +24,16 @@ func (s *Server) LogStream(w http.ResponseWriter, r *http.Request) {
 
 	cw, ok := w.(http.CloseNotifier)
 	if !ok {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, "Streaming not supported CloseNotifier")
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, "Streaming not supported CloseNotifier")
 	}
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, "Streaming not supported Flusher")
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, "Streaming not supported Flusher")
 		return
 	}
-
-	io.WriteString(w, ": ping\n\n")
+	pingStr := fmt.Sprintf("%x\r\nping", len("ping"))
+	io.WriteString(w, pingStr)
 	flusher.Flush()
 
 	repo := r.Context().Value("repo").(*models.Repo)
@@ -82,7 +83,7 @@ func (s *Server) LogStream(w http.ResponseWriter, r *http.Request) {
 			}
 		})
 
-		io.WriteString(w, "event: error\ndata: eof\n\n")
+		io.WriteString(w, fmt.Sprintf("%x\r\neof", len("eof")))
 		cancel()
 	}()
 
@@ -99,16 +100,22 @@ func (s *Server) LogStream(w http.ResponseWriter, r *http.Request) {
 		case <-cw.CloseNotify():
 			return
 		case <-time.After(time.Second * 30):
-			io.WriteString(w, ": ping\n\n")
+			io.WriteString(w, pingStr)
 			flusher.Flush()
 		case buf, ok := <-logc:
 			if ok {
 				if id > last {
-					io.WriteString(w, "id: "+strconv.Itoa(id))
-					io.WriteString(w, "\n")
-					io.WriteString(w, "data: ")
-					w.Write(buf)
-					io.WriteString(w, "\n\n")
+					// io.WriteString(w, "id: "+strconv.Itoa(id))
+					// io.WriteString(w, "\r\n")
+					// io.WriteString(w, "data: ")
+					ll := &LogLine{
+						ID:   id,
+						Data: string(buf),
+					}
+					s := ll.toString() //fmt.Sprintf("{\"id\":\"%s\",\"data\":\"%s\"}", strconv.Itoa(id), string(buf))
+					io.WriteString(w, fmt.Sprintf("%x\r\n%s", len(s), s))
+					// w.Write(buf)
+					// io.WriteString(w, "\r\n")
 					flusher.Flush()
 				}
 				id++
@@ -127,19 +134,19 @@ func (s *Server) GetProcLogs(w http.ResponseWriter, r *http.Request) {
 	store := s.Manager.Store()
 	build, err := store.GetBuildNumber(repo, num)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_NOT_FOUND, nil, fmt.Sprintf("build not found: %s", err))
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("build not found: %s", err))
 		return
 	}
 
 	proc, err := store.ProcFind(build, pid)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_NOT_FOUND, nil, fmt.Sprintf("proc not found: %s", err))
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("proc not found: %s", err))
 		return
 	}
 
 	rc, err := store.LogFind(proc)
 	if err != nil {
-		boxlinker.Resp(w, boxlinker.STATUS_NOT_FOUND, nil, fmt.Sprintf("log not found: %s", err))
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("log not found: %s", err))
 		return
 	}
 
@@ -147,4 +154,14 @@ func (s *Server) GetProcLogs(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	io.Copy(w, rc)
+}
+
+type LogLine struct {
+	ID   int    `json:"id"`
+	Data string `json:"data"`
+}
+
+func (ll *LogLine) toString() string {
+	b, _ := json.Marshal(ll)
+	return string(b)
 }
