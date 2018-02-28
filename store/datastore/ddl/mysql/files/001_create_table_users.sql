@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS users (
 ,created_unix             INTEGER
 ,updated_unix             INTEGER
 
-,UNIQUE (user_login,user_scm)
+,UNIQUE (user_center_id,user_login,user_scm)
 );
