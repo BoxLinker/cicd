@@ -167,7 +167,7 @@ func (c *client) Repo(u *models.User, owner, repoName string) (*models.Repo, err
 	return convertRepo(repo, u), nil
 }
 
-func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
+func (c *client) Repos(u *models.User, vcsName string) ([]*models.Repo, error) {
 	client := c.newClientToken(u.AccessToken)
 	opts := new(github.RepositoryListOptions)
 	opts.PerPage = 100
@@ -175,7 +175,7 @@ func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 
 	var repos []*models.Repo
 	if opts.Page > 0 {
-		list, resp, err := client.Repositories.List(context.Background(), "", opts)
+		list, resp, err := client.Repositories.List(context.Background(), vcsName, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -183,6 +183,21 @@ func (c *client) Repos(u *models.User) ([]*models.Repo, error) {
 		opts.Page = resp.NextPage
 	}
 	return repos, nil
+}
+
+// Orgs 这个方法，需要用户在 github 的应用页面 grant 相应的组织权限，才能获取到
+func (c *client) Orgs(u *models.User) ([]string, error) {
+	client := c.newClientToken(u.AccessToken)
+	opts := new(github.ListOptions)
+	orgs, _, err := client.Organizations.List(context.Background(), "", opts)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, 0)
+	for _, org := range orgs {
+		result = append(result, *org.Login)
+	}
+	return result, nil
 }
 
 func (c *client) Branches(u *models.User, owner, repoName string) ([]*models.Branch, error) {

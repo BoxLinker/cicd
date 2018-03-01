@@ -38,12 +38,21 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if flush {
-		if repos, err := s.Manager.GetSCM(u.SCM).Repos(u); err != nil {
+		scm := s.Manager.GetSCM(u.SCM)
+		orgs, err := scm.Orgs(u)
+		if err != nil {
 			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 			return
-		} else if err := s.Manager.Store().RepoBatch(u, repos); err != nil {
-			httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
-			return
+		}
+		orgs = append(orgs, u.Login)
+		for _, name := range orgs {
+			if repos, err := scm.Repos(u, name); err != nil {
+				httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+				return
+			} else if err := s.Manager.Store().RepoBatch(u, repos); err != nil {
+				httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+				return
+			}
 		}
 	}
 

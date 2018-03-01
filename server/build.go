@@ -26,7 +26,7 @@ func (s *Server) GetBuild(w http.ResponseWriter, r *http.Request) {
 	repo := r.Context().Value("repo").(*models.Repo)
 	build, err := s.Manager.Store().GetBuildNumber(repo, buildNum)
 	if err != nil {
-		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("build not found: %v", err))
+		httplib.Resp(w, httplib.STATUS_OK, nil, err.Error())
 		return
 	}
 	httplib.Resp(w, httplib.STATUS_OK, build)

@@ -51,7 +51,7 @@
 
 [[constraint]]
   name = "github.com/docker/docker"
-  version = "1.13.1"
+  version = "1.12.x"
 
 [[constraint]]
   name = "github.com/docker/libcompose"

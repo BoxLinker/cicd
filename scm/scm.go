@@ -9,7 +9,7 @@ import (
 type SCM interface {
 	Authorize(w http.ResponseWriter, r *http.Request, stateParam string) (*models.User, error)
 
-	Repos(u *models.User) ([]*models.Repo, error)
+	Repos(u *models.User, vcsName string) ([]*models.Repo, error)
 	Repo(u *models.User, owner, repo string) (*models.Repo, error)
 
 	File(u *models.User, r *models.Repo, b *models.Build, f string) ([]byte, error)
@@ -23,6 +23,7 @@ type SCM interface {
 	Activate(u *models.User, r *models.Repo, link string) error
 	Deactivate(u *models.User, r *models.Repo, link string) error
 	Branches(u *models.User, owner, repoName string) ([]*models.Branch, error)
+	Orgs(u *models.User) ([]string, error)
 }
 
 // Refresher refreshes an oauth token and expiration for the given user. It
