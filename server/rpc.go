@@ -539,6 +539,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 			}
 		}
 	}
+	logrus.Debugf("rpc done:> \nproc: %+v\n running: %t, status: %s\n", proc, running, status)
 	if !running {
 		build.Status = status
 		build.Finished = proc.Stopped

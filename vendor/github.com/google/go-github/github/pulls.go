@@ -20,7 +20,7 @@ type PullRequestsService service
 
 // PullRequest represents a GitHub pull request on a repository.
 type PullRequest struct {
-	ID                  *int       `json:"id,omitempty"`
+	ID                  *int64     `json:"id,omitempty"`
 	Number              *int       `json:"number,omitempty"`
 	State               *string    `json:"state,omitempty"`
 	Title               *string    `json:"title,omitempty"`
@@ -29,6 +29,7 @@ type PullRequest struct {
 	UpdatedAt           *time.Time `json:"updated_at,omitempty"`
 	ClosedAt            *time.Time `json:"closed_at,omitempty"`
 	MergedAt            *time.Time `json:"merged_at,omitempty"`
+	Labels              []*Label   `json:"labels,omitempty"`
 	User                *User      `json:"user,omitempty"`
 	Merged              *bool      `json:"merged,omitempty"`
 	Mergeable           *bool      `json:"mergeable,omitempty"`

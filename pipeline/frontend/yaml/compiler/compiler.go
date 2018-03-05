@@ -1,14 +1,15 @@
 package compiler
 
 import (
+	"fmt"
+
+	"github.com/BoxLinker/cicd/pipeline/backend"
 	"github.com/BoxLinker/cicd/pipeline/frontend"
 	"github.com/BoxLinker/cicd/pipeline/frontend/yaml"
-	"github.com/BoxLinker/cicd/pipeline/backend"
-	"fmt"
 )
 
 type Secret struct {
-	Name string
+	Name  string
 	Value string
 	Match []string
 }
@@ -64,13 +65,13 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 
 	// create a default volume
 	config.Volumes = append(config.Volumes, &backend.Volume{
-		Name: fmt.Sprintf("%s_default", c.prefix),
+		Name:   fmt.Sprintf("%s_default", c.prefix),
 		Driver: "local",
 	})
 
 	// create a default network
 	config.Networks = append(config.Networks, &backend.Network{
-		Name: fmt.Sprintf("%s_default", c.prefix),
+		Name:   fmt.Sprintf("%s_default", c.prefix),
 		Driver: "bridge",
 	})
 
@@ -85,8 +86,8 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 	// add default clone step
 	if c.local == false && len(conf.Clone.Containers) == 0 {
 		container := &yaml.Container{
-			Name: "clone",
-			Image: "plugins/git:latest",
+			Name:  "clone",
+			Image: "index.boxlinker.com/boxlinker/cicd-plugins-git:latest",
 			Vargs: map[string]interface{}{"depth": "0"},
 		}
 		switch c.metadata.Sys.Arch {
@@ -167,6 +168,13 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		step := c.createProcess(name, container, "pipeline")
 		stage.Steps = append(stage.Steps, step)
 	}
+
+	// container := conf.Publish
+	// container.Privileged = true
+	// container.Image = "index.boxlinker.com/boxlinker/cicd-plugins-docker:latest"
+	// container.Vargs = map[string]interface{}{"depth": "0"}
+	// name := fmt.Sprintf("%s_step_publish", c.prefix)
+	// step := c.createProcess(name, container, "pipeline")
 
 	c.setupCacheRebuild(conf, config)
 

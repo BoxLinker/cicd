@@ -18,6 +18,7 @@ type (
 		Workspace Workspace
 		Clone     Containers
 		Pipeline  Containers
+		Publish   *Container
 		Services  Containers
 		Networks  Networks
 		Volumes   Volumes
