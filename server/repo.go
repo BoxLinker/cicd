@@ -109,6 +109,9 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	// todo 默认为信任，测试用，可以给 container 指定 privileged 参数来调用节点机的 docker 命令
+	repo.IsTrusted = true
+
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
