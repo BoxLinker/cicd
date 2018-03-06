@@ -170,15 +170,17 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 	}
 
 	container := conf.Publish
-	container.Privileged = true
-	container.Image = "index.boxlinker.com/boxlinker/cicd-plugins-docker:latest"
-	container.Vargs = map[string]interface{}{
-		"repo": fmt.Sprintf("index.boxlinker.com/%s", c.metadata.Repo.Name),
-		"tags": fmt.Sprintf("%s-%s", c.metadata.Curr.Commit.Branch, c.metadata.Curr.Commit.Sha),
+	if container != nil {
+		container.Privileged = true
+		container.Image = "index.boxlinker.com/boxlinker/cicd-plugins-docker:latest"
+		container.Vargs = map[string]interface{}{
+			"repo": fmt.Sprintf("index.boxlinker.com/%s", c.metadata.Repo.Name),
+			"tags": fmt.Sprintf("%s-%s", c.metadata.Curr.Commit.Branch, c.metadata.Curr.Commit.Sha),
+		}
+		name := fmt.Sprintf("%s_step_publish", c.prefix)
+		step := c.createProcess(name, container, "pipeline")
+		stage.Steps = append(stage.Steps, step)
 	}
-	name := fmt.Sprintf("%s_step_publish", c.prefix)
-	step := c.createProcess(name, container, "pipeline")
-	stage.Steps = append(stage.Steps, step)
 
 	c.setupCacheRebuild(conf, config)
 
