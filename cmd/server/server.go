@@ -92,19 +92,19 @@ var flags = []cli.Flag{
 	},
 	cli.StringFlag{
 		EnvVar: "CLONE_IMAGE",
-		Name:   "platform",
+		Name:   "clone-image",
 	},
 	cli.StringFlag{
 		EnvVar: "PUBLISH_IMAGE",
-		Name:   "platform",
+		Name:   "publish-image",
 	},
 	cli.StringFlag{
 		EnvVar: "REGISTRY_USERNAME",
-		Name:   "platform",
+		Name:   "registry-username",
 	},
 	cli.StringFlag{
 		EnvVar: "REGISTRY_PASSWORD",
-		Name:   "platform",
+		Name:   "registry-password",
 	},
 }
 
