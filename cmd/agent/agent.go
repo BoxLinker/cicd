@@ -140,7 +140,6 @@ func (r *runner) run(ctx context.Context) error {
 	if minutes := work.Timeout; minutes != 0 {
 		timeout = time.Duration(minutes) * time.Minute
 	}
-
 	logger := log.With().
 		Str("repo", extractRepositoryName(work.Config)).
 		Str("build", extractBuildNumber(work.Config)).

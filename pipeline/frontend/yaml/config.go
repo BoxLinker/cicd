@@ -18,7 +18,7 @@ type (
 		Workspace Workspace
 		Clone     Containers
 		Pipeline  Containers
-		Publish   *Container
+		Publish   bool
 		Services  Containers
 		Networks  Networks
 		Volumes   Volumes

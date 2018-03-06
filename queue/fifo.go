@@ -43,7 +43,6 @@ func New() Queue {
 }
 
 func (q *fifo) Push(c context.Context, task *Task) error {
-	logrus.Debugf("fifo push (%s)", string(task.Data))
 	q.Lock()
 	q.pending.PushBack(task)
 	q.Unlock()

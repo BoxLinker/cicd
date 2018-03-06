@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/BoxLinker/cicd/pipeline/backend"
 	"github.com/BoxLinker/cicd/pipeline/frontend"
@@ -89,6 +90,10 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			Name:  "clone",
 			Image: "index.boxlinker.com/boxlinker/cicd-plugins-git:latest",
 			Vargs: map[string]interface{}{"depth": "0"},
+			AuthConfig: yaml.AuthConfig{
+				Username: "boxlinker",
+				Password: "QAZwsx123",
+			},
 		}
 		switch c.metadata.Sys.Arch {
 		case "linux/arm":
@@ -169,17 +174,39 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		stage.Steps = append(stage.Steps, step)
 	}
 
-	container := conf.Publish
-	if container != nil {
-		container.Privileged = true
-		container.Image = "index.boxlinker.com/boxlinker/cicd-plugins-docker:latest"
-		container.Vargs = map[string]interface{}{
-			"repo": fmt.Sprintf("index.boxlinker.com/%s", c.metadata.Repo.Name),
-			"tags": fmt.Sprintf("%s-%s", c.metadata.Curr.Commit.Branch, c.metadata.Curr.Commit.Sha),
+	publish := conf.Publish
+	if publish {
+		container := &yaml.Container{
+			Name:  "publish",
+			Image: "index.boxlinker.com/boxlinker/cicd-plugins-docker:latest",
+			Vargs: map[string]interface{}{
+				"repo":     fmt.Sprintf("index.boxlinker.com/%s", strings.ToLower(c.metadata.Repo.Name)),
+				"auto_tag": true,
+			},
+			Privileged: true,
+			AuthConfig: yaml.AuthConfig{
+				Username: "boxlinker",
+				Password: "QAZwsx123",
+			},
 		}
+		stagePublish := new(backend.Stage)
+		stagePublish.Name = fmt.Sprintf("%s_stage_publish", c.prefix)
+		stagePublish.Alias = container.Name
+		config.Stages = append(config.Stages, stagePublish)
+
+		// container.Privileged = true
+		// container.Image = "index.boxlinker.com/boxlinker/cicd-plugins-docker:latest"
+		// container.Vargs = map[string]interface{}{
+		// 	"repo":     fmt.Sprintf("index.boxlinker.com/%s", strings.ToLower(c.metadata.Repo.Name)),
+		// 	"auto_tag": true,
+		// }
+		// container.AuthConfig = yaml.AuthConfig{
+		// 	Username: "boxlinker",
+		// 	Password: "QAZwsx123",
+		// }
 		name := fmt.Sprintf("%s_step_publish", c.prefix)
 		step := c.createProcess(name, container, "pipeline")
-		stage.Steps = append(stage.Steps, step)
+		stagePublish.Steps = append(stagePublish.Steps, step)
 	}
 
 	c.setupCacheRebuild(conf, config)

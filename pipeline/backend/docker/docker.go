@@ -83,7 +83,9 @@ func (e *engine) Exec(proc *backend.Step) error {
 	}
 
 	_, err := e.client.ContainerCreate(ctx, config, hostConfig, nil, proc.Name)
+	logrus.Debugf("container create err :> %v", err)
 	if client.IsErrNotFound(err) {
+		logrus.Debugf("image pull %s, %+v", config.Image, pullopts)
 		rc, perr := e.client.ImagePull(ctx, config.Image, pullopts)
 		if perr != nil {
 			return perr

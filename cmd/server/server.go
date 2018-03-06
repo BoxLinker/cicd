@@ -90,6 +90,22 @@ var flags = []cli.Flag{
 		Usage:  "file path for the drone config",
 		Value:  ".boxci.yml",
 	},
+	cli.StringFlag{
+		EnvVar: "CLONE_IMAGE",
+		Name:   "platform",
+	},
+	cli.StringFlag{
+		EnvVar: "PUBLISH_IMAGE",
+		Name:   "platform",
+	},
+	cli.StringFlag{
+		EnvVar: "REGISTRY_USERNAME",
+		Name:   "platform",
+	},
+	cli.StringFlag{
+		EnvVar: "REGISTRY_PASSWORD",
+		Name:   "platform",
+	},
 }
 
 func server(c *cli.Context) error {

@@ -13,7 +13,7 @@
     "program": "${workspaceRoot}/cmd/server",
     "env":{
       "GOPATH": "/Users/cabernety/go",
-      "GOROOT": "/usr/local/Cellar/go/1.9.3/libexec",
+      "GOROOT": "/usr/local/Cellar/go/1.9.4/libexec",
     }
   },
   {
@@ -24,7 +24,7 @@
     "program": "${workspaceRoot}/cmd/agent",
     "env":{
       "GOPATH": "/Users/cabernety/go",
-      "GOROOT": "/usr/local/Cellar/go/1.9.3/libexec",
+      "GOROOT": "/usr/local/Cellar/go/1.9.4/libexec",
     }
   },
     {
