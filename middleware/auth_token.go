@@ -26,22 +26,22 @@ func (a *AuthAPITokenRequired) ServeHTTP(w http.ResponseWriter, r *http.Request,
 	if token == "" {
 		token = httplib.GetQueryParam(r, "access_token")
 	}
-	logrus.Debugf("request token (%s)", token)
+	// logrus.Debugf("request token (%s)", token)
 	if token == "" {
 		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
 		return
 	}
-	logrus.Debugf("AuthToken url: %s", a.authUrl)
+	// logrus.Debugf("AuthToken url: %s", a.authUrl)
 	result, err := auth.TokenAuth(a.authUrl, token)
 	if err != nil {
 		boxlinker.Resp(w, boxlinker.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 		return
 	}
 	if result.Status == boxlinker.STATUS_OK && next != nil {
-		logrus.Debugf("AuthToken result: %+v", result)
+		// logrus.Debugf("AuthToken result: %+v", result)
 		next(w, r.WithContext(context.WithValue(r.Context(), "user", result.Results)))
 	} else {
-		logrus.Debugf("AuthToken failed: %+v", result)
+		logrus.Debugf("AuthToken token:(%s) failed: %+v", token, result)
 		boxlinker.Resp(w, boxlinker.STATUS_UNAUTHORIZED, nil, "unauthorized")
 	}
 }
