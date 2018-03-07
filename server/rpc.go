@@ -103,6 +103,7 @@ func (s *BoxCIServer) Update(c oldcontext.Context, req *proto.UpdateRequest) (*p
 		Proc:     req.GetState().GetName(),
 		Exited:   req.GetState().GetExited(),
 	}
+	logrus.Debugf("==> server update state -> %+v", state)
 	res := new(proto.Empty)
 	err := peer.Update(c, req.GetId(), state)
 	return res, err

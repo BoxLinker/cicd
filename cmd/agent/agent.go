@@ -301,6 +301,7 @@ func (r *runner) run(ctx context.Context) error {
 			proclogger.Debug().
 				Msg("update step status")
 
+			logrus.Debugf("==> agent update state -> %+v", procState)
 			if uerr := r.client.Update(ctxmeta, work.ID, procState); uerr != nil {
 				proclogger.Debug().
 					Err(uerr).

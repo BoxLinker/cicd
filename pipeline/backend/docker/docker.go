@@ -116,12 +116,12 @@ func (e *engine) Kill(proc *backend.Step) error {
 }
 
 func (e *engine) Wait(proc *backend.Step) (*backend.State, error) {
-	wait, err := e.client.ContainerWait(noContext, proc.Name)
+	_, err := e.client.ContainerWait(noContext, proc.Name)
 	if err != nil {
 		log.Error().Msgf("=> ContainerWait error: %s", err)
 		return nil, err
 	}
-	log.Debug().Msgf("==> ContainerWait result (%d)", wait)
+	// log.Debug().Msgf("==> ContainerWait result (%d)", wait)
 
 	// DONE:
 	// 	for {
@@ -139,7 +139,6 @@ func (e *engine) Wait(proc *backend.Step) (*backend.State, error) {
 	if ierr != nil {
 		return nil, ierr
 	}
-	log.Debug().Msgf("===> ContainerInspect: (%+v)", info.State)
 	if info.State.Running {
 		// todo
 	}
