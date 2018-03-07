@@ -325,7 +325,7 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		proc.Started = state.Started
 		proc.State = models.StatusRunning
 	}
-
+	logrus.Debugf("server RPC Update ProcUpdate: %+v", proc)
 	if err := s.store.ProcUpdate(proc); err != nil {
 		logrus.Errorf("error: rpc.update: cannot update proc: %s", err)
 	}
@@ -448,6 +448,7 @@ func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
 	if build.Status == models.StatusPending {
 		build.Status = models.StatusRunning
 		build.Started = state.Started
+		logrus.Debugf("rpc init UpdateBuild: %+v", build)
 		if err := s.store.UpdateBuild(build); err != nil {
 			logrus.Errorf("error: init: cannot update build_id %d state: %s", build.ID, err)
 		}
@@ -505,6 +506,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 	if proc.ExitCode != 0 || proc.Error != "" {
 		proc.State = models.StatusFailure
 	}
+	logrus.Debugf("server RPC Done ProcUpdate: %+v", proc)
 	if err := s.store.ProcUpdate(proc); err != nil {
 		logrus.Errorf("error: done: cannot update proc_id %d state: %s", procID, err)
 	}
@@ -514,7 +516,10 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 	}
 
 	// TODO handle this error
-	procs, _ := s.store.ProcList(build)
+	procs, err := s.store.ProcList(build)
+	if err != nil {
+		logrus.Errorf("error: done: ProcList err: %v", err)
+	}
 	for _, p := range procs {
 		if p.Running() && p.PPID == proc.PID {
 			p.State = models.StatusSkipped
@@ -544,6 +549,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 	if !running {
 		build.Status = status
 		build.Finished = proc.Stopped
+		logrus.Debugf("rpc done UpdateBuild: %+v", build)
 		if err := s.store.UpdateBuild(build); err != nil {
 			logrus.Errorf("error: done: cannot update build_id %d final state: %s", build.ID, err)
 		}
