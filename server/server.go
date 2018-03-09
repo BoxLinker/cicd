@@ -59,6 +59,11 @@ func (s *Server) Run() error {
 
 	router.HandleFunc("/v1/cicd/{scm}/hook", s.Hook).Methods("POST")
 
+	rRouter := getRouter(router, "/v1/cicd/user/scms", loginRequired)
+	{
+		rRouter.HandleFunc("", s.GetScms).Methods("GET")
+	}
+
 	userRouter := getRouter(router, "/v1/cicd/{scm}/user",
 		loginRequired, scmRequired)
 	{

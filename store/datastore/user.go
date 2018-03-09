@@ -9,6 +9,21 @@ import (
 	"github.com/russross/meddler"
 )
 
+func (db *datastore) GetUserScms(uCenterID string) []*models.User {
+	if uCenterID == "" {
+		return nil
+	}
+	sql := `
+select user_id, user_center_id, user_login, user_scm, user_email from users where user_center_id = ?
+`
+	results := []*models.User{}
+	if err := meddler.QueryAll(db, &results, sql, uCenterID); err != nil {
+		logrus.Errorf("[DataStore] GetUserScms error: %v", err)
+		return nil
+	}
+	return results
+}
+
 func (db *datastore) SaveUser(user *models.User) error {
 	logrus.Debugf("SaveUser (%+v)", user)
 	user.Created = time.Now()

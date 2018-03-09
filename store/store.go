@@ -19,6 +19,7 @@ type Store interface {
 	GetUserByUCenterID(uCenterID string, scm string) *models.User
 	UpdateUser(user *models.User) error
 	GetUserByIDAndSCM(id int64, scm string) (*models.User, error)
+	GetUserScms(uCenterID string) []*models.User
 
 	GetRepo(id int64) (*models.Repo, error)
 	RepoList(opt *RepoListOptions) []*models.Repo
