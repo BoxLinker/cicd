@@ -178,6 +178,10 @@ func (d *Database) Update(db DB, table string, src interface{}) error {
 		d.quoted(pkName), ph)
 	values = append(values, pkValue)
 
+	fmt.Println("--- sql ---")
+	fmt.Printf("%s\nvalues:> %+v", q, values)
+	fmt.Println("-----------")
+
 	if _, err := db.Exec(q, values...); err != nil {
 		return &dbErr{msg: "meddler.Update: DB error in Exec", err: err}
 	}
