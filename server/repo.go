@@ -64,7 +64,7 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}
-
+	pc.TotalCount = s.Manager.Store().RepoCount(u)
 	httplib.Resp(w, httplib.STATUS_OK, pc.PaginationResult(s.Manager.Store().RepoList(&store.RepoListOptions{
 		User:       u,
 		Active:     active,

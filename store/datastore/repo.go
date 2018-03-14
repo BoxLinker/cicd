@@ -13,6 +13,18 @@ import (
 
 const repoTable = "repos"
 
+func (db *datastore) RepoCount(user *models.User) int {
+	stmt := "select count(*) count from repos where repo_user_id = ?"
+	var result struct {
+		Count int `meddler:"count"`
+	}
+	if err := meddler.QueryRow(db, &result, stmt, user.ID); err != nil {
+		logrus.Errorf("RepoCount error: %v", err)
+		return 0
+	}
+	return result.Count
+}
+
 func (db *datastore) GetRepo(id int64) (*models.Repo, error) {
 	var repo = new(models.Repo)
 	var err = meddler.Load(db, repoTable, repo, id)

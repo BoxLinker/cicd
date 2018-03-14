@@ -25,6 +25,7 @@ type Store interface {
 	RepoList(opt *RepoListOptions) []*models.Repo
 	UpdateRepo(repo *models.Repo) error
 	RepoBatch(user *models.User, repos []*models.Repo) error
+	RepoCount(user *models.User) int
 	GetRepoOwnerName(owner, repoName, scm string) (*models.Repo, error)
 
 	BranchBatch(repo *models.Repo, branches []*models.Branch) error
