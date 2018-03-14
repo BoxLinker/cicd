@@ -38,6 +38,7 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if flush {
+		logrus.Debugln("flush repos ...")
 		scm := s.Manager.GetSCM(u.SCM)
 		orgs, err := scm.Orgs(u)
 		if err != nil {
@@ -45,6 +46,7 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		orgs = append(orgs, u.Login)
+		logrus.Debugf("get orgs %+v", orgs)
 		for _, name := range orgs {
 			if repos, err := scm.Repos(u, name); err != nil {
 				httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
@@ -52,7 +54,14 @@ func (s *Server) GetRepos(w http.ResponseWriter, r *http.Request) {
 			} else if err := s.Manager.Store().RepoBatch(u, repos); err != nil {
 				httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
 				return
+			} else {
+				repoNames := make([]string, 0)
+				for _, repo := range repos {
+					repoNames = append(repoNames, repo.FullName)
+				}
+				logrus.Debugf("get repos for %s: %+v", repoNames)
 			}
+
 		}
 	}
 
