@@ -38,7 +38,7 @@ func (s *Server) Run() error {
 
 	logrus.Debugf("Server Config: \n%+v", s.Config)
 
-	loginRequired := middleware.NewAuthAPITokenRequired(s.Config.TokenAuthURL)
+	loginRequired := middleware.NewAuthAPITokenRequired(s.Config.TokenAuthURL, s.Manager.Store())
 	scmRequired := middleware.NewSCMRequired()
 	authorizeTokenM := middleware.NewAuthorizeTokenRequired(s.Config.TokenAuthURL, fmt.Sprintf("%s/login", s.Config.HomeHost))
 	setRepoM := middleware.NewSetRepo(s.Manager)
@@ -65,13 +65,13 @@ func (s *Server) Run() error {
 	}
 
 	userRouter := getRouter(router, "/v1/cicd/{scm}/user",
-		loginRequired, scmRequired)
+		scmRequired, loginRequired)
 	{
 		userRouter.HandleFunc("/repos", s.GetRepos).Methods("GET")
 	}
 
 	repoRouter := getRouter(router, "/v1/cicd/{scm}/repos/{owner}/{name}",
-		loginRequired, scmRequired, setRepoM)
+		scmRequired, loginRequired, setRepoM)
 	{
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
 		repoRouter.HandleFunc("", s.GetRepo).Methods("GET")
@@ -85,7 +85,7 @@ func (s *Server) Run() error {
 		repoRouter.HandleFunc("/search_build", s.SearchRepoBuilding).Methods("GET")
 	}
 
-	streamRouter := getRouter(router, "/v1/cicd/{scm}/stream/logs/{owner}/{name}", loginRequired, scmRequired, setRepoM)
+	streamRouter := getRouter(router, "/v1/cicd/{scm}/stream/logs/{owner}/{name}", scmRequired, loginRequired, setRepoM)
 	{
 		streamRouter.HandleFunc("/{build}/{number}", s.LogStream).Methods("GET")
 	}
@@ -95,25 +95,6 @@ func (s *Server) Run() error {
 	{
 		authorizeRouter.HandleFunc("/authorize", s.AuthCodeBase).Methods("POST", "GET")
 	}
-
-	//repoRouter := mux.NewRouter().
-	//	PathPrefix("/v1/cicd/repos/{owner}/{name}").Subrouter()
-	//repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
-	//repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
-	//
-	//router.PathPrefix("/v1/cicd/repos/{owner}/{name}").
-	//	Handler(negroni.New(
-	//		loginRequired,
-	//		scmRequired,
-	//		setRepoM,
-	//		negroni.Wrap(repoRouter),
-	//	))
-
-	//authorizeRouter := mux.NewRouter()
-	//authorizeRouter.HandleFunc("/v1/cicd/authorize/{scm}", s.AuthCodeBase).Methods("GET", "POST")
-	//tokenAuthRedirectRouter := negroni.New(authorizeTokenM)
-	//tokenAuthRedirectRouter.UseHandler(authorizeRouter)
-	//globalMux.Handle("/v1/cicd/authorize/", tokenAuthRedirectRouter)
 
 	ss := http.Server{
 		Addr:    s.Listen,
@@ -133,18 +114,28 @@ func getRouter(pRouter *mux.Router, path string, middlewares ...negroni.Handler)
 }
 
 func (a *Server) getCtxUserID(r *http.Request) string {
-	us := r.Context().Value("user")
-	if us == nil {
-		return ""
+	userData := a.getUserInfo(r)
+	if userData != nil {
+		return userData.UCenterID
 	}
-	ctx := us.(map[string]interface{})
-	if ctx == nil || ctx["uid"] == nil {
-		return ""
-	}
-	return ctx["uid"].(string)
+	return ""
+	// us := r.Context().Value("user")
+	// if us == nil {
+	// 	return ""
+	// }
+	// ctx := us.(map[string]interface{})
+	// if ctx == nil || ctx["uid"] == nil {
+	// 	return ""
+	// }
+	// return ctx["uid"].(string)
 }
 
 func (a *Server) getUserInfo(r *http.Request) *models.User {
-	scm := mux.Vars(r)["scm"]
-	return a.Manager.Store().GetUserByUCenterID(a.getCtxUserID(r), scm)
+	// scm := mux.Vars(r)["scm"]
+	userData, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		return nil
+	}
+	return userData
+	// return a.Manager.Store().GetUserByUCenterID(a.getCtxUserID(r), scm)
 }

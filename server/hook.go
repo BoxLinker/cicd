@@ -63,7 +63,7 @@ func (s *Server) Hook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo, err := s.Manager.Store().GetRepoOwnerName(tmpRepo.Owner, tmpRepo.Name, scmType)
+	repo, err := s.Manager.Store().GetRepoOwnerName(s.getUserInfo(r), tmpRepo.Owner, tmpRepo.Name, scmType)
 	if err != nil {
 		logrus.Errorf("failed to find repo %s/%s from hook. %s", tmpRepo.Owner, tmpRepo.Name, err)
 		http.Error(w, err.Error(), http.StatusNotFound)

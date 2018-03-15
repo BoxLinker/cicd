@@ -64,7 +64,8 @@ ORDER BY repo_name ASC
 -- name: repo-find-fullName
 
 SELECT * FROM repos
-WHERE repo_full_name = ?
+WHERE repo_user_id = ?
+  AND repo_full_name = ?
   AND repo_scm = ?
 LIMIT 1
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/BoxLinker/boxlinker-api"
 	"github.com/BoxLinker/cicd/manager"
+	"github.com/BoxLinker/cicd/models"
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -26,7 +27,8 @@ func (s *setRepo) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Ha
 	name := mux.Vars(r)["name"]
 	scm := mux.Vars(r)["scm"]
 	logrus.Debugf("[Middleware] SetRepo: owner(%s) name(%s) scm(%s)", owner, name, scm)
-	repo, err := s.manager.Store().GetRepoOwnerName(owner, name, scm)
+	user := r.Context().Value("user").(*models.User)
+	repo, err := s.manager.Store().GetRepoOwnerName(user, owner, name, scm)
 	if err != nil {
 		logrus.Errorf("GetRepo err: %v", err)
 		boxlinker.Resp(w, boxlinker.STATUS_NOT_FOUND, nil, err.Error())
