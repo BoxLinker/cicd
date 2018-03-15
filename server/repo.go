@@ -19,8 +19,7 @@ func (s *Server) GetRepo(w http.ResponseWriter, r *http.Request) {
 	scm := mux.Vars(r)["scm"]
 	owner := mux.Vars(r)["owner"]
 	name := mux.Vars(r)["name"]
-	user := s.getUserInfo(r)
-	repo, err := s.Manager.Store().GetRepoOwnerName(user, owner, name, scm)
+	repo, err := s.Manager.Store().GetRepoOwnerName(owner, name, scm)
 	if err != nil {
 		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil, fmt.Sprintf("repo not found: %v", err))
 		return
@@ -81,7 +80,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	owner := mux.Vars(r)["owner"]
 	repoName := mux.Vars(r)["name"]
 	logrus.Debugf("PostRepo remote(%s) user(%s) owner(%s) repo(%s)", scmType, user.Login, owner, repoName)
-	repo, err := s.Manager.Store().GetRepoOwnerName(user, owner, repoName, scmType)
+	repo, err := s.Manager.Store().GetRepoOwnerName(owner, repoName, scmType)
 	if err != nil {
 		httplib.Resp(w, httplib.STATUS_NOT_FOUND, fmt.Sprintf("repo (%s/%s) not found: %s", owner, repoName, err.Error()))
 		return
@@ -122,7 +121,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	// todo 默认为信任，测试用，可以给 container 指定 privileged 参数来调用节点机的 docker 命令
 	repo.IsTrusted = true
 
-	t := token.New(token.HookToken, repo.FullName)
+	t := token.New(token.HookToken, fmt.Sprintf("%d=%s", repo.UserID, repo.FullName))
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
 		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())

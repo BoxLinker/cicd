@@ -108,6 +108,22 @@ var migrations = []struct {
 		name: "create-table-branches",
 		stmt: createTableBranches,
 	},
+	{
+		name: "drop-repos-index-repoFullName",
+		stmt: dropReposIndexRepoFullName,
+	},
+	{
+		name: "create-repos-index-repoUnique",
+		stmt: createReposIndexRepoUnique,
+	},
+	{
+		name: "drop-users-index",
+		stmt: dropUsersIndex,
+	},
+	{
+		name: "create_users-index",
+		stmt: createusersIndex,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -485,4 +501,24 @@ CREATE TABLE IF NOT EXISTS branches (
 
 ,UNIQUE (branch_name,branch_repo_id)
 );
+`
+
+//
+// 015_alert_repos_index.sql
+//
+
+var dropReposIndexRepoFullName = `
+ALTER TABLE repos DROP INDEX IF EXISTS repo_full_name;
+`
+
+var createReposIndexRepoUnique = `
+ALTER TABLE repos ADD CONSTRAINT repo_unique UNIQUE(repo_full_name,repo_scm);
+`
+
+var dropUsersIndex = `
+ALTER TABLE users DROP INDEX IF EXISTS user_center_id;
+`
+
+var createusersIndex = `
+ALTER TABLE users ADD CONSTRAINT users_unique UNIQUE(user_login,user_scm);
 `
