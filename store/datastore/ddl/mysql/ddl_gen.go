@@ -512,7 +512,7 @@ ALTER TABLE repos DROP INDEX IF EXISTS repo_unique;
 `
 
 var createReposIndexRepoUnique = `
-ALTER TABLE repos ADD CONSTRAINT repo_unique UNIQUE(repo_full_name,repo_scm);
+ALTER TABLE repos ADD CONSTRAINT repo_unique UNIQUE IF NOT EXISTS (repo_full_name,repo_scm);
 `
 
 var dropUsersIndex = `
@@ -520,5 +520,5 @@ ALTER TABLE users DROP INDEX IF EXISTS user_center_id;
 `
 
 var createusersIndex = `
-ALTER TABLE users ADD CONSTRAINT users_unique UNIQUE(user_login,user_scm);
+ALTER TABLE users ADD CONSTRAINT users_unique UNIQUE IF NOT EXISTS (user_login,user_scm);
 `
