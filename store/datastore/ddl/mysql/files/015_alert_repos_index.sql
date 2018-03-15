@@ -1,6 +1,6 @@
 -- name: drop-repos-index-repoFullName
 
-ALTER TABLE repos DROP INDEX IF EXISTS repo_full_name;
+ALTER TABLE repos DROP INDEX IF EXISTS repo_unique;
 
 -- name: create-repos-index-repoUnique
 

@@ -508,7 +508,7 @@ CREATE TABLE IF NOT EXISTS branches (
 //
 
 var dropReposIndexRepoFullName = `
-ALTER TABLE repos DROP INDEX IF EXISTS repo_full_name;
+ALTER TABLE repos DROP INDEX IF EXISTS repo_unique;
 `
 
 var createReposIndexRepoUnique = `
