@@ -74,6 +74,7 @@ func (s *Server) Run() error {
 		scmRequired, loginRequired, setRepoM)
 	{
 		repoRouter.HandleFunc("", s.PostRepo).Methods("POST")
+		repoRouter.HandleFunc("", s.DeleteRepo).Methods("DELETE")
 		repoRouter.HandleFunc("", s.GetRepo).Methods("GET")
 		repoRouter.HandleFunc("/procs/{build_id}", s.GetProcs).Methods("GET")
 		repoRouter.HandleFunc("/logs/{number}/{pid}", s.GetProcLogs).Methods("GET")
@@ -111,6 +112,14 @@ func getRouter(pRouter *mux.Router, path string, middlewares ...negroni.Handler)
 	r.UseHandler(subRouter)
 	pRouter.PathPrefix(path).Handler(r)
 	return subRouter
+}
+
+func (a *Server) getRepo(r *http.Request) *models.Repo {
+	repo, ok := r.Context().Value("repo").(*models.Repo)
+	if !ok {
+		return nil
+	}
+	return repo
 }
 
 func (a *Server) getCtxUserID(r *http.Request) string {

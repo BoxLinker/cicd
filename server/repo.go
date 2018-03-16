@@ -121,7 +121,7 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	// todo 默认为信任，测试用，可以给 container 指定 privileged 参数来调用节点机的 docker 命令
 	repo.IsTrusted = true
 
-	t := token.New(token.HookToken, fmt.Sprintf("%d=%s", repo.UserID, repo.FullName))
+	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
 		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
@@ -153,6 +153,28 @@ func (s *Server) PostRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httplib.Resp(w, httplib.STATUS_OK, repo)
+}
+
+func (s *Server) DeleteRepo(w http.ResponseWriter, r *http.Request) {
+	scmType := mux.Vars(r)["scm"]
+	remote := s.Manager.GetSCM(scmType)
+	user := s.getUserInfo(r)
+	repo := s.getRepo(r)
+	if repo == nil {
+		httplib.Resp(w, httplib.STATUS_NOT_FOUND, nil)
+		return
+	}
+	repo.IsActive = false
+	repo.UserID = 0
+	if err := s.Manager.Store().UpdateRepo(repo); err != nil {
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+		return
+	}
+	if err := remote.Deactivate(user, repo, httplib.GetURL(r)); err != nil {
+		httplib.Resp(w, httplib.STATUS_INTERNAL_SERVER_ERR, nil, err.Error())
+		return
+	}
+	httplib.Resp(w, httplib.STATUS_OK, nil)
 }
 
 // QueryRepoBranchBuilding 查询指定分支下的最近 5 条构建记录
